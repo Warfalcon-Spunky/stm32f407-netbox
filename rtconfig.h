@@ -107,6 +107,9 @@
 #define RT_USING_PIN
 #define RT_USING_PWM
 #define RT_USING_RTC
+#define RTC_SYNC_USING_NTP
+#define RTC_NTP_FIRST_SYNC_DELAY 30
+#define RTC_NTP_SYNC_PERIOD 3600
 #define RT_USING_SPI
 #define RT_USING_SFUD
 #define RT_SFUD_USING_SFDP
@@ -130,6 +133,7 @@
 
 #define RT_USING_LIBC
 #define RT_USING_POSIX
+#define RT_USING_POSIX_TERMIOS
 
 /* Network */
 
@@ -228,6 +232,12 @@
 
 /* IoT - internet of things */
 
+#define PKG_USING_LIBMODBUS
+#define PKG_USING_LIBMODBUS_RTU
+#define HAVE_DECL_TIOCSRS485 1
+#define HAVE_DECL_TIOCM_RTS 1
+#define PKG_USING_LIBMODBUS_LATEST_VERSION
+#define PKG_LIBMODBUS_VER_NUM 0x99999
 
 /* Wi-Fi */
 
@@ -236,6 +246,14 @@
 
 /* Wiced WiFi */
 
+#define PKG_USING_NETUTILS
+#define PKG_NETUTILS_NTP
+#define NETUTILS_NTP_TIMEZONE 8
+#define NETUTILS_NTP_HOSTNAME "cn.ntp.org.cn"
+#define NETUTILS_NTP_HOSTNAME2 "ntp.rt-thread.org"
+#define NETUTILS_NTP_HOSTNAME3 "edu.ntp.org.cn"
+#define PKG_NETUTILS_TELNET
+#define PKG_USING_NETUTILS_LATEST_VERSION
 #define PKG_USING_AT_DEVICE
 #define AT_DEVICE_USING_SIM800C
 #define AT_DEVICE_SIM800C_INIT_ASYN

@@ -1,3 +1,9 @@
 [submodule "packages/at_device-latest/at_device"]
 	path = packages/at_device-latest/at_device
 	url = https://github.com/RT-Thread-packages/at_device
+[submodule "packages/libmodbus-latest/libmodbus"]
+	path = packages/libmodbus-latest/libmodbus
+	url = https://github.com/loogg/libmodbus
+[submodule "packages/netutils-latest"]
+	path = packages/netutils-latest
+	url = https://github.com/RT-Thread-packages/netutils
