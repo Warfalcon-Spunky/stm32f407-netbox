@@ -1,0 +1,197 @@
+menu "Hardware Drivers Config"
+
+config SOC_STM32F407VG
+    bool
+    select SOC_SERIES_STM32F4
+    default y
+
+menu "On-chip Peripheral Drivers"
+
+    config BSP_USING_GPIO
+        bool "Enable GPIO"
+        select RT_USING_PIN
+        default y
+		
+	config BSP_USING_ON_CHIP_FLASH
+		bool "Enable Onchip FLASH"
+		select SOC_SERIES_STM32F4
+		default y
+		
+	menuconfig BSP_USING_ONCHIP_RTC
+        bool "Enable Onchip RTC"
+        default y
+		
+	config RT_USING_WDT
+        bool "Enable WDT"
+        default n
+
+    menuconfig BSP_USING_UART
+        bool "Enable UART"
+        default n
+        select RT_USING_SERIAL
+        if BSP_USING_UART
+            config BSP_USING_UART1
+                bool "Enable UART1"
+                default n
+
+            config BSP_UART1_RX_USING_DMA
+                bool "Enable UART1 RX DMA"
+                depends on BSP_USING_UART1 && RT_SERIAL_USING_DMA
+                default n
+				
+			config BSP_USING_UART2
+                bool "Enable UART2"
+                default n
+
+            config BSP_UART2_RX_USING_DMA
+                bool "Enable UART2 RX DMA"
+                depends on BSP_USING_UART2 && RT_SERIAL_USING_DMA
+                default n
+				
+			config BSP_USING_UART3
+                bool "Enable UART3"
+                default n
+
+            config BSP_UART3_RX_USING_DMA
+                bool "Enable UART3 RX DMA"
+                depends on BSP_USING_UART3 && RT_SERIAL_USING_DMA
+                default n
+        endif
+		
+    menuconfig BSP_USING_SPI
+        bool "Enable SPI BUS"
+        default n
+        select RT_USING_SPI
+        if BSP_USING_SPI
+            config BSP_USING_SPI1
+                bool "Enable SPI1 BUS"
+                default n
+
+            config BSP_SPI1_TX_USING_DMA
+                bool "Enable SPI1 TX DMA"
+                depends on BSP_USING_SPI1
+                default n
+                
+            config BSP_SPI1_RX_USING_DMA
+                bool "Enable SPI1 RX DMA"
+                depends on BSP_USING_SPI1
+                select BSP_SPI1_TX_USING_DMA
+                default n
+        endif
+		
+	menuconfig BSP_USING_I2C1
+        bool "Enable I2C1 BUS (software simulation)"
+        default n
+        select RT_USING_I2C
+        select RT_USING_I2C_BITOPS
+        select RT_USING_PIN
+        if BSP_USING_I2C1
+            config BSP_I2C1_SCL_PIN
+                int "i2c1 SCL pin index"
+                range 0 80
+                default 24
+            config BSP_I2C1_SDA_PIN
+                int "I2C1 SDA pin index"
+                range 0 80
+                default 25
+        endif
+		
+	menuconfig BSP_USING_ETH
+        bool "Enable Ethernet"
+        default y
+        select RT_USING_LWIP
+        select RT_USING_PIN
+        if BSP_USING_ETH
+            config BSP_ETH_RST_PIN
+                int "ETH reset pin index"
+                range 0 80
+                default 51
+				
+			config PHY_USING_LAN8720A
+				bool "PHY chip: LAN8720A"
+				default y
+				
+			config PHY_USING_DM9161CEP
+				bool "PHY chip: DM9161CEP"
+				default n
+        endif
+		
+	config BSP_USING_USBD_FS
+        bool "Enable USBD"
+        default y
+        
+    source "libraries/HAL_Drivers/Kconfig"
+    
+endmenu
+
+menu "Onboard Peripheral Drivers"
+	menuconfig BSP_USING_GPRS
+		bool "Enable GPRS"
+		default n
+		select BSP_USING_UART
+		select BSP_USING_UART3
+		if BSP_USING_GPRS
+			config BSP_GPRS_PWR_PIN
+                int "GPRS power pin index"
+                range 0 80
+                default 64
+				
+			config BSP_GPRS_STA_PIN
+                int "GPRS status pin index"
+                range 0 80
+                default 68
+		endif
+	
+	menuconfig BSP_USING_AT_WIFI
+	    bool "Enable WIFI module"
+		default n
+		select BSP_USING_UART
+		select BSP_USING_UART1
+		
+	menuconfig BSP_USING_DATAFLASH
+	    bool "Enable DATAFLASH module"
+		default y
+		select BSP_USING_SPI
+		select BSP_USING_SPI1
+		if BSP_USING_DATAFLASH
+			config BSP_DATAFALSH_CS_PIN
+                int "DATAFLASH cs pin index"
+                range 0 80
+                default 22
+		endif
+		
+	menuconfig BSP_USING_EEPROM
+	    bool "Enable EEPROM module"
+		default n
+		select BSP_USING_I2C1
+		
+	menuconfig BSP_USING_BEEP
+		bool "Enable Beep"
+		default y
+		select RT_USING_PWM
+		if BSP_USING_BEEP
+			config BSP_USING_PWM1
+				bool "Enable PWM1"
+				default y
+			
+			config BSP_USING_PWM1_CH1
+				bool "Enable PWM1 CH1"
+				default y
+		endif
+endmenu
+
+menu "Board extended module Drivers"
+	menuconfig BSP_USING_SUB_CTRL
+	    bool "Enable sub controller"
+		default y
+		select BSP_USING_UART
+		select BSP_USING_UART2
+		if BSP_USING_SUB_CTRL
+			config BSP_RS485_DIR_PIN
+                int "RS485 director pin index"
+                range 0 80
+                default 52
+		endif
+endmenu
+ 
+endmenu
