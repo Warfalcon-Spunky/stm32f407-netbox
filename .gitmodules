@@ -7,3 +7,15 @@
 [submodule "packages/netutils-latest"]
 	path = packages/netutils-latest
 	url = https://github.com/RT-Thread-packages/netutils
+[submodule "packages/at_device-latest"]
+	path = packages/at_device-latest
+	url = https://github.com/RT-Thread-packages/at_device
+[submodule "packages/EasyFlash-latest"]
+	path = packages/EasyFlash-latest
+	url = https://github.com/armink/EasyFlash
+[submodule "packages/fal-latest"]
+	path = packages/fal-latest
+	url = https://github.com/RT-Thread-packages/fal
+[submodule "packages/libmodbus-latest"]
+	path = packages/libmodbus-latest
+	url = https://github.com/loogg/libmodbus
