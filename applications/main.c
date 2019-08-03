@@ -19,13 +19,50 @@
 static int dev_old_flag;
 #endif
 
-#define LOG_TAG                        "app.main"
-#include <at_log.h>
+#include <fal.h>
+#define FS_PARTITION_NAME   			"elmfs"
+
+#define LOG_TAG                        	"app.main"
+#include <app_log.h>
 
 int main(void)
 {
     return RT_EOK;
 }
+
+int fs_init(void)
+{
+	/* partition initialized */
+	fal_init();
+    /* easyflash initialized */
+//    easyflash_init();
+
+	/* Create a block device on the file system partition of spi flash */
+    struct rt_device *flash_dev = fal_blk_device_create(FS_PARTITION_NAME);
+    if (flash_dev == RT_NULL)
+	{
+        LOG_D("Can't create a block device on '%s' partition.", FS_PARTITION_NAME);
+	}
+    else
+	{
+        LOG_D("Create a block device on the %s partition of flash successful.", FS_PARTITION_NAME);
+	}
+	
+    /* mount the file system from "filesystem" partition of spi flash. */
+    if (dfs_mount(FS_PARTITION_NAME, "/", "elm", 0, 0) == 0)
+	{
+        LOG_D("Filesystem initialized!");
+	}
+    else
+    {
+        LOG_D("Failed to initialize filesystem!\n");
+        LOG_D("You should create a filesystem on the block device first!");
+		LOG_D("msh> mkfs -t elm %s", FAL_USING_NOR_FLASH_DEV_NAME);
+    }    
+    
+    return 0;
+}
+INIT_ENV_EXPORT(fs_init);
 
 int vcom_init(void)
 {

@@ -277,7 +277,7 @@ static struct rt_pin_irq_hdr pin_irq_hdr_tab[] =
 static uint32_t pin_irq_enable_mask=0;
 
 #define ITEM_NUM(items) sizeof(items) / sizeof(items[0])
-static const struct pin_index *get_pin(uint8_t pin)
+const struct pin_index *get_pin(uint8_t pin)
 {
     const struct pin_index *index;
 
