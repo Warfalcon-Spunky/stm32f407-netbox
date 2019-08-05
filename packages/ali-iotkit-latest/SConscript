@@ -1,162 +1,298 @@
+import os
 from building import *
 import rtconfig
-Import('RTT_ROOT')
-import os
-from string import Template
 
-# 1. Specific certificate file template
-cert_template = """
-/*
- * Copyright (c) 2006-2018 RT-Thread Development Team. All rights reserved.
- * License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+cwd     = GetCurrentDir()
 
-#include "mbedtls/certs.h"
+src     = []
+CPPPATH = []
 
-const char mbedtls_root_certificate[] = 
-"-----BEGIN CERTIFICATE-----\\r\\n\" \\
-"MIIDSjCCAjKgAwIBAgIQRK+wgNajJ7qJMDmGLvhAazANBgkqhkiG9w0BAQUFADA/\\r\\n" \\
-"MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT\\r\\n" \\
-"DkRTVCBSb290IENBIFgzMB4XDTAwMDkzMDIxMTIxOVoXDTIxMDkzMDE0MDExNVow\\r\\n" \\
-"PzEkMCIGA1UEChMbRGlnaXRhbCBTaWduYXR1cmUgVHJ1c3QgQ28uMRcwFQYDVQQD\\r\\n" \\
-"Ew5EU1QgUm9vdCBDQSBYMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\\r\\n" \\
-"AN+v6ZdQCINXtMxiZfaQguzH0yxrMMpb7NnDfcdAwRgUi+DoM3ZJKuM/IUmTrE4O\\r\\n" \\
-"rz5Iy2Xu/NMhD2XSKtkyj4zl93ewEnu1lcCJo6m67XMuegwGMoOifooUMM0RoOEq\\r\\n" \\
-"OLl5CjH9UL2AZd+3UWODyOKIYepLYYHsUmu5ouJLGiifSKOeDNoJjj4XLh7dIN9b\\r\\n" \\
-"xiqKqy69cK3FCxolkHRyxXtqqzTWMIn/5WgTe1QLyNau7Fqckh49ZLOMxt+/yUFw\\r\\n" \\
-"7BZy1SbsOFU5Q9D8/RhcQPGX69Wam40dutolucbY38EVAjqr2m7xPi71XAicPNaD\\r\\n" \\
-"aeQQmxkqtilX4+U9m5/wAl0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNV\\r\\n" \\
-"HQ8BAf8EBAMCAQYwHQYDVR0OBBYEFMSnsaR7LHH62+FLkHX/xBVghYkQMA0GCSqG\\r\\n" \\
-"SIb3DQEBBQUAA4IBAQCjGiybFwBcqR7uKGY3Or+Dxz9LwwmglSBd49lZRNI+DT69\\r\\n" \\
-"ikugdB/OEIKcdBodfpga3csTS7MgROSR6cz8faXbauX+5v3gTt23ADq1cEmv8uXr\\r\\n" \\
-"AvHRAosZy5Q6XkjEGB5YGV8eAlrwDPGxrancWYaLbumR9YbK+rlmM6pZW87ipxZz\\r\\n" \\
-"R8srzJmwN0jP41ZL9c8PDHIyh8bwRLtTcm1D9SZImlJnt1ir/md2cXjbDaJWFBM5\\r\\n" \\
-"JDGFoqgCWjBH4d1QB7wCCZAA62RjYJsWvIjJEubSfZGL+T0yjWW06XyxV3bqxbYo\\r\\n" \\
-"Ob8VZRzI9neWagqNdwvYkQsEjgfbKbYK7p2CNTUQ\\r\\n" \\
-"-----END CERTIFICATE-----\\r\\n" \\
-${CERT_CONTENT}
-;
+#
+# atm
+#
+if GetDepend(['ATM_ENABLED']):
+    src += Glob("iotkit-embedded/src/atm/at_api.c")
+    if GetDepend(['AT_TCP_ENABLED']):
+        src += Split("""
+        iotkit-embedded/src/atm/at_conn_mbox.c
+        iotkit-embedded/src/atm/at_conn_mgmt.c
+        iotkit-embedded/src/atm/at_tcp.c
+        """)
+    if GetDepend(['AT_MQTT_ENABLED']):
+        src += Glob("iotkit-embedded/src/atm/at_mqtt.c")
+    if GetDepend(['AT_PARSER_ENABLED']):
+        src += Glob("iotkit-embedded/src/atm/at_parser.c")
 
-const size_t mbedtls_root_certificate_len = sizeof(mbedtls_root_certificate);
+    CPPPATH += [cwd + '/iotkit-embedded/src/atm']
+#### atm end ####
 
-"""
+#
+# infra
+#
+src += Glob('iotkit-embedded/src/infra/infra_defs.c')
 
-# 2. Create substitute from template
-cert_subs = Template(cert_template)
+if GetDepend(['INFRA_AES']):
+    src += Glob('iotkit-embedded/src/infra/infra_aes.c')
+if GetDepend(['INFRA_CJSON']):
+    src += Glob('iotkit-embedded/src/infra/infra_cjson.c')
+if GetDepend(['INFRA_COMPAT']):
+    src += Glob('iotkit-embedded/src/infra/infra_compat.c')
+if GetDepend(['INFRA_HTTPC']):
+    src += Glob('iotkit-embedded/src/infra/infra_httpc.c')
+if GetDepend(['INFRA_JSON_PARSER']):
+    src += Glob('iotkit-embedded/src/infra/infra_json_parser.c')
+if GetDepend(['INFRA_LOG']):
+    src += Glob('iotkit-embedded/src/infra/infra_log.c')
+if GetDepend(['INFRA_MD5']):
+    src += Glob('iotkit-embedded/src/infra/infra_md5.c')
+if GetDepend(['INFRA_MEM_STATS']):
+    src += Glob('iotkit-embedded/src/infra/infra_mem_stats.c')
+if GetDepend(['INFRA_NET']):
+    src += Glob('iotkit-embedded/src/infra/infra_net.c')
+if GetDepend(['INFRA_PREAUTH']):
+    src += Glob('iotkit-embedded/src/infra/infra_preauth.c')
+if GetDepend(['INFRA_LOG_NETWORK_PAYLOAD']):
+    src += Glob('iotkit-embedded/src/infra/infra_prt_nwk_payload.c')
+if GetDepend(['INFRA_REPORT']):
+    src += Glob('iotkit-embedded/src/infra/infra_report.c')
+if GetDepend(['INFRA_SHA1']):
+    src += Glob('iotkit-embedded/src/infra/infra_sha1.c')
+if GetDepend(['INFRA_SHA256']):
+    src += Glob('iotkit-embedded/src/infra/infra_sha256.c')
+if GetDepend(['INFRA_STRING']):
+    src += Glob('iotkit-embedded/src/infra/infra_string.c')
+if GetDepend(['INFRA_TIMER']):
+    src += Glob('iotkit-embedded/src/infra/infra_timer.c')
 
-# 3. Get the current absolute path
-cwd = GetCurrentDir()
+CPPPATH += [cwd + '/iotkit-embedded/src/infra']
+#### infra end ####
 
-# 4. PEM certificate file path (*.pem or *.cer)
-certs_user_dir = cwd + os.sep + 'certs'
-certs_default_dir = cwd + os.sep + (os.sep).join(['certs', 'default'])
+#
+# mqtt
+#
+if GetDepend(['MQTT_COMM_ENABLED']):
+    src += Glob('iotkit-embedded/src/mqtt/*.c')
+    if GetDepend(['MQTT_DEFAULT_IMPL']):
+        src += Glob('iotkit-embedded/src/mqtt/impl/*.c')
+        CPPPATH += [cwd + '/iotkit-embedded/src/mqtt/impl']
 
-ROOT_CA_FILE = []
+    CPPPATH += [cwd + '/iotkit-embedded/src/mqtt']
+#### mqtt end ####
 
-# 5. File that stores the contents of the certificate file
-output_cert_file = cwd + os.sep + (os.sep).join(['ports', 'src', 'tls_certificate.c'])
-
-if GetDepend(['PKG_USING_MBEDTLS_EXAMPLE']):
-    path = cwd + os.sep + (os.sep).join(['certs', 'default', 'DIGITAL_SIGNATURE_TRUST_ROOT_CA.cer'])
-    if os.path.exists(path):
-        ROOT_CA_FILE += [path]
-
-if GetDepend(['PKG_USING_MBEDTLS_USE_ALL_CERTS']):
-    file_list = os.listdir(certs_default_dir)
-    if len(file_list):
-        for i in range(0, len(file_list)):
-            path = os.path.join(certs_default_dir, file_list[i])
-            if os.path.isfile(path):
-                ROOT_CA_FILE += [path]
-
-if GetDepend(['PKG_USING_MBEDTLS_USER_CERTS']):
-    file_list = os.listdir(certs_user_dir)
-    if len(file_list):
-        for i in range(0, len(file_list)):
-            path = os.path.join(certs_user_dir, file_list[i])
-            if os.path.isfile(path):
-                ROOT_CA_FILE += [path]
-
-
-KCONFIG_ROOT_CA_DICT = {'PKG_USING_MBEDTLS_THAWTE_ROOT_CA': 'THAWTE_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_VERSIGN_PBULIC_ROOT_CA': 'VERSIGN_PUBLIC_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_VERSIGN_UNIVERSAL_ROOT_CA': 'VERSIGN_UNIVERSAL_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_GEOTRUST_ROOT_CA': 'GEOTRUST_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_DIGICERT_ROOT_CA': 'DIGICERT_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_GODADDY_ROOT_CA': 'GODADDY_ROOT_CA.cer', 
-                        'PKG_USING_MBEDTLS_COMODOR_ROOT_CA': 'COMODOR_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_DST_ROOT_CA': 'DIGITAL_SIGNATURE_TRUST_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_CLOBALSIGN_ROOT_CA': 'CLOBALSIGN_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_ENTRUST_ROOT_CA': 'ENTRUST_ROOT_CA.cer', \
-                        'PKG_USING_MBEDTLS_AMAZON_ROOT_CA': 'AMAZON_ROOT_CA.cer'}
-
-for key, value in KCONFIG_ROOT_CA_DICT.items():
-    if GetDepend([key]):
-        path = os.path.join(certs_default_dir, value)
-        if os.path.exists(path) and os.path.isfile(path):
-            ROOT_CA_FILE += [path]
-
-ROOT_CA_FILE = list(set(ROOT_CA_FILE))
-
-file_content = ""
-
-# 6. Traverse the specified certificate file
-if len(ROOT_CA_FILE) > 0:
-    for i in range(0, len(ROOT_CA_FILE)):
-        if os.path.isfile(ROOT_CA_FILE[i]):
-            # READ CER FILE, copy to tls_certificate.c
-            with open(ROOT_CA_FILE[i], 'r') as ca:
-                # Pre-read, check first line
-                if not ca.readline().startswith("-----BEGIN CERTIFICATE"):
-                    print("[mbedtls] Warning: ", ROOT_CA_FILE[i], "is not CA file! Skipped!")
-                    continue
-                ca.seek(0)
-                for line in ca.readlines():
-                    file_content += '"' + line.strip() + '\\r\\n" \\\n'
-
-# 7. Populate certificate template content
-cert_content = cert_subs.substitute(CERT_CONTENT = file_content)
-
-# 8. Write certificate template content to tls_certificate.c
-with open(output_cert_file, 'w') as f:
-    f.write(cert_content)
+#
+# coap
+#
+if GetDepend(['COAP_COMM_ENABLED']):
+    if GetDepend(['COAP_CLIENT']):
+        src += Glob('iotkit-embedded/src/coap/client/*.c')
+        CPPPATH += [cwd + '/iotkit-embedded/src/coap/client']
+    if GetDepend(['COAP_PACKET']):
+        src += Glob('iotkit-embedded/src/coap/CoAPPacket/*.c')
+        CPPPATH += [cwd + '/iotkit-embedded/src/coap/CoAPPacket']
+    if GetDepend(['COAP_SERVER']):
+        src += Glob('iotkit-embedded/src/coap/server/*.c')
+        CPPPATH += [cwd + '/iotkit-embedded/src/coap/server']
+    CPPPATH += [cwd + '/iotkit-embedded/src/coap']
+#### coap end ####
 
 
-src = Glob('mbedtls/library/*.c')
-SrcRemove(src, 'mbedtls/library/net_sockets.c')
+#
+# device bind
+#
+if GetDepend(['DEV_BIND_ENABLED']):
+    src += Glob("iotkit-embedded/src/dev_bind/impl/*.c")
+    src += Glob("iotkit-embedded/src/dev_bind/impl/awss_reset/*.c")
+    src += Glob("iotkit-embedded/src/dev_bind/impl/os/*.c")
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_bind']
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_bind/awss_reset']
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_bind/os']
+#### device bind ####
 
-src += Glob('ports/src/*.c')
 
-if GetDepend(['PKG_USING_MBEDTLS_EXAMPLE']):
-    src += Glob('samples/*.c')
+#
+# device model
+#
+if GetDepend(['DEVICE_MODEL_ENABLED']):
+    src += Split("""
+    iotkit-embedded/src/dev_model/client/dm_client.c
+    iotkit-embedded/src/dev_model/client/dm_client_adapter.c
+    iotkit-embedded/src/dev_model/dm_api.c
+    iotkit-embedded/src/dev_model/dm_cota.c
+    iotkit-embedded/src/dev_model/dm_fota.c
+    iotkit-embedded/src/dev_model/dm_ipc.c
+    iotkit-embedded/src/dev_model/dm_manager.c
+    iotkit-embedded/src/dev_model/dm_message_cache.c
+    iotkit-embedded/src/dev_model/dm_message.c
+    iotkit-embedded/src/dev_model/dm_opt.c
+    iotkit-embedded/src/dev_model/dm_ota.c
+    iotkit-embedded/src/dev_model/dm_msg_process.c
+    iotkit-embedded/src/dev_model/dm_utils.c
+    iotkit-embedded/src/dev_model/iotx_cm_mqtt.c
+    iotkit-embedded/src/dev_model/impl_linkkit.c
+    iotkit-embedded/src/dev_model/iotx_cm.c
+    """)
 
-CPPPATH = [
-cwd + '/mbedtls/include',
-cwd + '/ports/inc',
-]
+    if GetDepend(['LOG_REPORT_TO_CLOUD']):
+        src += Split("""
+        iotkit-embedded/src/dev_model/dm_log_report.c
+        """)
 
-if rtconfig.CROSS_TOOL == 'gcc' or rtconfig.CROSS_TOOL == 'keil' or rtconfig.CROSS_TOOL == 'iar':
-    import shutil
-    cp_src = cwd + '/ports/inc/tls_config.h'
-    cp_dst = cwd + '/mbedtls/include/mbedtls/config.h'
-    shutil.copyfile(cp_src, cp_dst)
-    CPPDEFINES = []
-else:
-    CPPDEFINES = []
+    # ALCS(alink local communication service) is a communication between phone and device
+    if GetDepend(['ALCS_ENABLED']):
+        src += Glob("iotkit-embedded/src/dev_model/alcs/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/dev_model/alcs']
 
-group = DefineGroup('mbedtls', src, depend = ['PKG_USING_MBEDTLS'], CPPPATH = CPPPATH, CPPDEFINES = CPPDEFINES)
+    if GetDepend(['COAP_COMM_ENABLED']):
+        src += Glob("iotkit-embedded/src/dev_model/iotx_cm_coap.c")
+
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_model']
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_model/client']
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_model/server']
+#### device model end ####
+
+#
+# device sign
+#
+if GetDepend(['DEV_SIGN']):
+    src += Glob('iotkit-embedded/src/dev_sign/dev_sign_mqtt.c')
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_sign']
+#### device sign end ####
+
+#
+# device reset
+#
+if GetDepend(['DEV_RESET']):
+    src += Glob('iotkit-embedded/src/dev_reset/dev_reset.c')
+    CPPPATH += [cwd + '/iotkit-embedded/src/dev_reset']
+#### device reset end ####
+
+#
+# dynamic register
+#
+if GetDepend(['DYNAMIC_REGISTER']):
+    src += Glob("iotkit-embedded/src/dynamic_register/*.c")
+    CPPPATH += [cwd + '/iotkit-embedded/src/dynamic_register']
+#### dynamic register end ####
+
+#
+# http
+#
+if GetDepend(['HTTP_COMM_ENABLED']):
+    src += Glob("iotkit-embedded/src/http/*.c")
+    CPPPATH += [cwd + '/iotkit-embedded/src/http']
+#### http end ####
+
+#
+# http2
+#
+if GetDepend(['HTTP2_COMM_ENABLED']):
+    src += Glob("iotkit-embedded/src/http2/http2_api.c")
+    src += Glob("iotkit-embedded/src/http2/iotx_http2.c")
+    
+    if GetDepend(['FS_ENABLED']):
+        src += Glob("iotkit-embedded/src/http2/http2_upload_api.c")
+    CPPPATH += [cwd + '/iotkit-embedded/src/http2']
+#### http end ####
+
+#
+# ota
+#
+if GetDepend(['OTA_ENABLED']):
+    src += Split("""
+    iotkit-embedded/src/ota/iotx_ota.c
+    iotkit-embedded/src/ota/ota_fetch.c
+    iotkit-embedded/src/ota/ota_lib.c
+    """)
+    CPPPATH += [cwd + '/iotkit-embedded/src/ota']
+#### ota end ####
+
+#
+# wifi provision
+#
+if GetDepend(['WIFI_PROVISION_ENABLED']):
+    if GetDepend(['AWSS_SUPPORT_SMARTCONFIG']):
+        src += Glob("iotkit-embedded/src/wifi_provision/smartconfig/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/smartconfig']
+    if GetDepend(['AWSS_SUPPORT_SMARTCONFIG_WPS']):
+        src += Glob("iotkit-embedded/src/wifi_provision/p2p/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/p2p']
+
+    if GetDepend(['AWSS_SUPPORT_ZEROCONFIG']):
+        src += Glob("iotkit-embedded/src/wifi_provision/zero_config/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/zero_config']
+
+    if GetDepend(['AWSS_SUPPORT_AHA']):
+        src += Glob("iotkit-embedded/src/wifi_provision/phone_ap/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/phone_ap']
+    if GetDepend(['AWSS_SUPPORT_ADHA']):
+        src += Glob("iotkit-embedded/src/wifi_provision/router_ap/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/router_ap']
+
+    if GetDepend(['AWSS_SUPPORT_DEV_AP']):
+        src += Glob("iotkit-embedded/src/wifi_provision/dev_ap/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/dev_ap']
+
+    if GetDepend(['AWSS_FRAMEWORKS']):
+        src += Glob("iotkit-embedded/src/wifi_provision/frameworks/*.c")
+        src += Glob("iotkit-embedded/src/wifi_provision/frameworks/*/*.c")
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/frameworks']
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/frameworks/aplist']
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/frameworks/ieee80211']
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/frameworks/statics']
+        CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision/frameworks/utils']
+
+    CPPPATH += [cwd + '/iotkit-embedded/src/wifi_provision']
+#### wifi provision end ####
+
+#
+# wrappers | port
+#
+src += Split("""
+ports/rtthread/HAL_OS_rtthread.c
+ports/rtthread/HAL_TCP_rtthread.c
+ports/rtthread/HAL_UDP_rtthread.c
+ports/wrapper.c
+""")
+
+if GetDepend(['SUPPORT_TLS']) or GetDepend(['COAP_DTLS_SUPPORT']):
+    src += Glob('iotkit-embedded/certs/root_ca.c')
+if GetDepend(['SUPPORT_TLS']):
+    src += Glob('ports/tls/mbedtls/HAL_TLS_mbedtls.c')
+if GetDepend(['COAP_DTLS_SUPPORT']):
+    src += Glob('ports/tls/mbedtls/HAL_DTLS_mbedtls.c')
+    
+if GetDepend(['HAL_CRYPTO']):
+    src += Glob('ports/rtthread/HAL_Crypt_rtthread.c')
+
+CPPPATH += [cwd + '/iotkit-embedded/wrappers']
+#### wrappers | port end ####
+
+#
+# samples
+#
+if GetDepend(['PKG_USING_ALI_IOTKIT_DEV_MODEL_SAMPLE']):
+    src += Split("""
+    samples/dev_model/cJSON.c
+    samples/dev_model/linkkit_example_solo.c
+    """)
+    CPPPATH += [cwd + '/iotkit-embedded/samples/dev_model']
+
+if GetDepend(['PKG_USING_ALI_IOTKIT_MQTT_SAMPLE']):
+    src += Split("""
+    samples/mqtt/mqtt-example.c
+    """)
+
+if GetDepend(['PKG_USING_ALI_IOTKIT_COAP_SAMPLE']):
+    src += Split("""
+    samples/coap/coap_example.c
+    """)
+
+if GetDepend(['PKG_USING_ALI_IOTKIT_OTA_SAMPLE']):
+    src += Split("""
+    samples/ota/ota_mqtt-example.c
+    """)
+#### samples end ####
+
+group = DefineGroup('ali-iotkit', src, depend = ['PKG_USING_ALI_IOTKIT'], CPPPATH = CPPPATH)
 
 Return('group')

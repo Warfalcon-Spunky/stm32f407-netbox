@@ -145,6 +145,7 @@
 
 #define SAL_USING_LWIP
 #define SAL_USING_AT
+#define SAL_USING_TLS
 #define SAL_USING_POSIX
 
 /* Network interface device */
@@ -269,9 +270,65 @@
 
 /* IoT Cloud */
 
+#define PKG_USING_ALI_IOTKIT
+#define PKG_USING_ALI_IOTKIT_PRODUCT_KEY "a1dSQSGZ77X"
+#define PKG_USING_ALI_IOTKIT_PRODUCT_SECRET "NfIdVcfBP7rtH24H"
+#define PKG_USING_ALI_IOTKIT_DEVICE_NAME "RGB-LED-DEV-1"
+#define PKG_USING_ALI_IOTKIT_DEVICE_SECRET "Ghuiyd9nmGowdZzjPqFtxhm3WUHEbIlI"
+#define PKG_ALI_IOTKIT_SELECT_ITEM
+#define PLATFORM_HAS_STDINT
+#define PLATFORM_HAS_DYNMEM
+#define PLATFORM_HAS_OS
+#define INFRA_STRING
+#define INFRA_NET
+#define INFRA_LIST
+#define INFRA_LOG_NETWORK_PAYLOAD
+#define INFRA_LOG
+
+/* Log Configurations */
+
+#define INFRA_LOG_MUTE_FLW
+#define INFRA_LOG_MUTE_DBG
+#define INFRA_LOG_MUTE_INF
+#define INFRA_LOG_MUTE_WRN
+#define INFRA_LOG_MUTE_CRT
+#define INFRA_TIMER
+#define INFRA_JSON_PARSER
+#define INFRA_CJSON
+#define INFRA_MD5
+#define INFRA_SHA256
+#define INFRA_REPORT
+#define INFRA_HTTPC
+#define INFRA_COMPAT
+#define INFRA_CLASSIC
+#define DEV_SIGN
+#define MQTT_COMM_ENABLED
+
+/* MQTT Configurations */
+
+#define MQTT_DEFAULT_IMPL
+#define MQTT_DIRECT
+#define DEVICE_MODEL_CLASSIC
+#define LOG_REPORT_TO_CLOUD
+#define DEVICE_MODEL_ENABLED
+
+/* Device Model Configurations */
+
+#define SUPPORT_TLS
+#define OTA_ENABLED
+#define PKG_USING_ALI_IOTKIT_LATEST_VERSION
+#define PKG_ALI_IOTKIT_VER_NUM 0x99999
 
 /* security packages */
 
+#define PKG_USING_MBEDTLS
+
+/* Select Root Certificate */
+
+#define MBEDTLS_AES_ROM_TABLES
+#define MBEDTLS_ECP_WINDOW_SIZE 2
+#define MBEDTLS_SSL_MAX_CONTENT_LEN 8192
+#define PKG_USING_MBEDTLS_LATEST_VERSION
 
 /* language packages */
 

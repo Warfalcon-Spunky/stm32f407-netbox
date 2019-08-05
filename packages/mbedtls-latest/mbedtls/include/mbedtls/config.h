@@ -587,7 +587,7 @@
  *
  * A man-in-the-browser attacker can recover authentication tokens sent through
  * a TLS connection using a 3DES based cipher suite (see "On the Practical
- * (In-)Security of 64-bit Block Ciphers" by Karthikeyan Bhargavan and Gaëtan
+ * (In-)Security of 64-bit Block Ciphers" by Karthikeyan Bhargavan and Ga?tan
  * Leurent, see https://sweet32.info/SWEET32_CCS16.pdf). If this attack falls
  * in your threat model or you are unsure, then you should keep this option
  * enabled to remove 3DES based cipher suites.
@@ -2741,7 +2741,7 @@
 
 /* MPI / BIGNUM options */
 //#define MBEDTLS_MPI_WINDOW_SIZE            6 /**< Maximum windows size used. */
-//#define MBEDTLS_MPI_MAX_SIZE               256 /**< Maximum number of bytes for usable MPIs. */
+//#define MBEDTLS_MPI_MAX_SIZE            1024 /**< Maximum number of bytes for usable MPIs. */
 
 /* CTR_DRBG options */
 //#define MBEDTLS_CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
@@ -2821,7 +2821,7 @@
  *
  * The value below is only an example, not the default.
  */
-#define MBEDTLS_SSL_CIPHERSUITES MBEDTLS_TLS_RSA_WITH_AES_128_CBC_SHA256
+//#define MBEDTLS_SSL_CIPHERSUITES MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,MBEDTLS_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
 
 /* X509 options */
 //#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */

@@ -1,80 +1,178 @@
-# mbedTLS
+# Ali IoTKit
 
-## 1、介绍 
+> 说明：  
+Ali IoTKit 软件包已经同步更新到 c-sdk-v3.0.1-269691d1b45b15fb9045a8eb178efa54b262aca1c-sdk.git 版本。本软件包中的文档教程未能及时更新，深表歉意，最新文档请移步阿里 [官方 Wikis](https://code.aliyun.com/edward.yangx/public-docs/wikis/user-guide/Linkkit_User_Manual) 和阿里 [官方文档](https://help.aliyun.com/product/93051.html?spm=a2c4g.11186623.6.540.393e492bC6TzC4)。
 
-**mbedTLS**（前身 PolarSSL）是一个由 ARM 公司开源和维护的 SSL/TLS 算法库。其使用 C 编程语言以最小的编码占用空间实现了 SSL/TLS 功能及各种加密算法，易于理解、使用、集成和扩展，方便开发人员轻松地在嵌入式产品中使用 SSL/TLS 功能。
+## 1. 介绍
 
-该 [mbedtls](https://github.com/RT-Thread-packages/mbedtls) 软件包是 **RT-Thread** 基于 [ARMmbed/mbedtls](https://github.com/ARMmbed/mbedtls/) 开源库 [v2.6.0 版本](https://github.com/ARMmbed/mbedtls/tree/72ea31b026e1fc61b01662474aa5125817b968bc)的移植，有关 mbedTLS 的更多信息，请参阅 [软件包详细介绍](docs/introduction.md) 。
+**ali-iotkit** 是 RT-Thread 移植的用于连接阿里云 IoT 平台的软件包。基础 SDK 是阿里提供的 [**iotkit-embedded C-SDK**](https://github.com/aliyun/iotkit-embedded)。
+
+**ali-iotkit** 为了方便设备上云封装了丰富的连接协议，如 MQTT、CoAP、HTTP、TLS，并且对硬件平台进行了抽象，使其不受具体的硬件平台限制而更加灵活。
+
+相对传统的云端接入 SDK，**ali-iotkit** 具有如下优势：
+
+- 快速接入能力
+- 嵌入式设备调优
+- 多编译器支持（Gcc、IAR、MDK）
+- 多连接协议支持（HTTP、MQTT、CoAP）
+- 跨硬件、跨 OS 平台支持
+- 设备固件 OTA 升级
+- TLS/DTLS 安全连接
+- 高可移植的应用端程序
+- 高可复用的功能组件
 
 ### 1.1 目录结构
 
 | 名称            | 说明 |
 | ----            | ---- |
-| certs           | CA 证书存放目录 |
 | docs            | 文档目录 |
-| mbedtls         | ARM mbedtls 源码 |
-| ports           | 移植文件目录 |
+| iotkit-embedded | 阿里 iotkit 原文件目录 |
+| ports            | 移植文件目录 |
 | samples         | 示例文件目录 |
-| LICENSE         | 许可证文件 |
-| README.md       | 软件包使用说明 |
-| SConscript      | RT-Thread 默认的构建脚本 |
 
-### 1.2 许可证
+### 1.2 资源占用
 
-Apache License Version 2.0 协议许可。
+在统计 iotkit 软件包的资源占用的时候，使用的是 MQTT + TLS 例程，仅统计了软件包本身占用的 RAM 和 ROM 大小，未统计 LibC 及外部依赖的文件所占用的资源大小（如 TLS），以及未统计 sample 例程本身占用的资源大小。
 
-## 2、获取软件包
+- 测试平台： iMXRT1052
+- 测试 IDE： MDK5
+- 优化级别： o2
 
-在使用的 BSP 目录下，使用 ENV 工具打开 menuconfig 来获取软件包。
+资源占用如下所示：
 
-- 配置软件包并使能示例
-
-```c
-RT-Thread online packages --->
-    security packages  --->
-            Select Root Certificate  --->      # 选择证书文件
-        [*] mbedtls: An portable and flexible SSL/TLS library  ---  # 打开 mbedtls 软件包
-        [*]   Store the AES tables in ROM      # 将 AES 表存储在 ROM 中，优化内存占用
-        (2)   Maximum window size used         # 用于点乘的最大“窗口”大小（2-7，该值越小内存占用也越小）
-        (3584) Maxium fragment length in bytes # 配置数据帧大小（0x7200 错误可尝试增加该大小）
-        [*]   Enable a mbedtls client example  # 开启 mbedtls 测试例程
-        [ ]   Enable Debug log output          # 开启调试 log 输出
-              version (latest)  --->           # 选择软件包版本，默认为最新版本
+```
+RO(CODE + RO)                   : 32886 bytes（32.11K）
+RW(RW + ZI)                     :  2421 bytes（ 2.36K）
+ROM(CODE + RO + RW)             : 32962 bytes（32.18K）
+测试运行 mqtt+tls 例程动态内存使用: 47502 bytes（45.94K）
 ```
 
-- 选择证书文件
+
+### 1.3 许可证
+
+`ali-iotkit` 软件包延用阿里 `iotkit-embedded` 软件包许可协议，请见 `iotkit-embedded/LICENSE` 文件。
+
+### 1.4 依赖
+
+- [RT_Thread 3.0+](https://github.com/RT-Thread/rt-thread/releases/tag/v3.0.4)
+- [MbedTLS 软件包](https://github.com/RT-Thread-packages/mbedtls)
+
+## 2. 如何使用
+
+### 2.1 启用软件包
+
+- 使用 `menuconfig` 使能 iotkit 软件包并填写设备信息
 
 ```c
-RT-Thread online packages --->
-    security packages  --->
-        [*] mbedtls: An portable and flexible SSL/TLS library  ---  # 打开 mbedtls 软件包
-                Select Root Certificate  --->                       # 选择证书文件
-                    [ ] Using all default CA(Use preset CA certificates. Take up more memory)
-                    [ ] Using user CA(copy your Root CA file to mbedtls package "certs" directory)
-                    [*] Using Digital Signature Trust Root CA       # 测试例程需要使用的证书
+RT-Thread online packages  --->
+    IoT - internet of things  --->
+        IoT Cloud  --->
+          [*] Ali-iotkit:  Ali Cloud SDK for IoT platform  --->
+                Select Aliyun platform (LinkDevelop Platform)  --->
+          (a1dSQSGZ77X) Config Product Key
+          (RGB-LED-DEV-1) Config Device Name
+          (Ghuiyd9nmGowdZzjPqFtxhm3WUHEbIlI) Config Device Secret
+          -*-   Enable MQTT
+          [*]     Enable MQTT sample
+          [*]     Enable MQTT direct connect
+          [*]     Enable SSL
+          [ ]   Enable COAP
+          [*]   Enable OTA
+                      Select OTA channel (Use MQTT OTA channel)  --->
+                    version (latest)  --->
 ```
 
-    - `Using all default CA` 配置选项会将 `certs/default` 目录下的所有预置证书加入编译，将占用很大的内存
-    - `Using user CA` 配置选项允许用户将自己需要的证书文件加入编译，需要用户将证书文件拷贝到 `certs` 根目录
-    - 更多使用说明请参阅 [软件包详细介绍](docs/introduction.md)
+- 增加 `mbedTLS` 帧大小（OTA 的时候**至少需要 8K 大小**）
+
+```c
+RT-Thread online packages  --->
+    security packages  --->
+      -*- mbedtls:An open source, portable, easy to use, readable and flexible SSL library  --->
+      (8192) Maxium fragment length in bytes
+```
 
 - 使用 `pkgs --update` 命令下载软件包
 
-## 3、使用 mbedtls
+### 2.2 执行示例
 
-- 如何从零开始使用，请参考 [用户手册](docs/user-guide.md)
-- 完整的 API 文档，请参考 [API 手册](docs/api.md)
-- 详细的示例介绍，请参考 [示例文档](docs/samples.md) 
-- mbedtls 协议工作原理，请参考 [工作原理](docs/principle.md) 
-- mbedtls RAM 和 ROM 优化，请阅读 [资源占用优化指南](docs/footprint-optimization-guide.md)
-- 更多**详细介绍文档**位于 [`/docs`](/docs) 文件夹下，**使用软件包进行开发前请务必查看**
+> 在 MSH 中使用命令执行预置的示例程序
 
-## 4、参考资料
+- MQTT Sample 单次发布订阅
 
-- mbedTLS官方网站：https://tls.mbed.org/
-- ARMmbed GitHub：[mbedtls](https://github.com/ARMmbed/mbedtls/tree/72ea31b026e1fc61b01662474aa5125817b968bc)
+该示例程序演示了如何使用 MQTT 发布、订阅 Topic，MSH 命令如下所示：
 
-## 5、 联系方式 & 感谢
+```c
+msh />ali_mqtt_test
+ali_mqtt_test|502 :: iotkit-embedded sdk version: V2.10
+[inf] iotx_device_info_init(40): device_info created successfully!
+[dbg] iotx_device_info_set(50): start to set device info!
+[dbg] iotx_device_info_set(64): device_info set successfully!
 
-- 维护： RT-Thread 开发团队
-- 主页： https://github.com/RT-Thread-packages/mbedtls
+...
+
+mqtt_client|324 :: out of sample!
+```
+
+- MQTT Sample 监听订阅消息
+
+该示例程序演示了如何使用 MQTT 发布、订阅 Topic，并一直监听订阅 Topic 的消息，MSH 命令如下所示：
+
+```c
+msh />ali_mqtt_test loop
+ali_mqtt_test|502 :: iotkit-embedded sdk version: V2.10
+[dbg] iotx_device_info_init(32): device_info already created, return!
+[dbg] iotx_device_info_set(50): start to set device info!
+[dbg] iotx_device_info_set(64): device_info set successfully!
+
+...
+
+[dbg] iotx_mc_cycle(1269): SUBACK
+event_handle|111 :: subscribe success, packet-id=0
+[dbg] iotx_mc_cycle(1269): SUBACK
+event_handle|111 :: subscribe success, packet-id=0
+```
+
+- OTA Sample
+
+该示例程序演示了如何使用阿里云 OTA 服务，使用 `ali_ota_test` 命令启动例程，这个时候，设备首先会上报当前版本号到阿里云，然后等待云端下发 OTA 升级命令。
+
+```c
+msh />ali_ota_test
+ali_ota_main|325 :: iotkit-embedded sdk version: V2.10
+[dbg] iotx_device_info_init(32): device_info already created, return!
+[dbg] iotx_device_info_set(50): start to set device info!
+[dbg] iotx_device_info_set(64): device_info set successfully!
+
+...
+
+mqtt_client|232 :: wait ota upgrade command....
+[dbg] iotx_mc_cycle(1260): PUBACK
+event_handle|117 :: publish success, packet-id=2
+[dbg] iotx_mc_cycle(1269): SUBACK
+event_handle|093 :: subscribe success, packet-id=1
+mqtt_client|232 :: wait ota upgrade command....
+mqtt_client|232 :: wait ota upgrade command....
+mqtt_client|232 :: wait ota upgrade command....
+```
+
+## 3、 参考
+
+- 上手使用，请参考[用户指南](docs/user-guide.md)
+- 详细的示例介绍，请参考[示例文档](docs/samples.md)
+- API 介绍，请参考[API 说明文档](docs/api.md)
+- 更多详细文档，请访问 `/docs` 目录查看
+
+## 4、 注意事项
+
+- 使用前请在 `menuconfig` 里配置自己的设备信息（PRODUCT_KEY、DEVICE_NAME 和 DEVICE_SECRET）
+- 开启 OTA 功能必须使能加密连接（因为 OTA 升级必须使用 HTTPS 下载固件）
+
+## 5、 常见问题
+
+- MbedTLS 返回 0x7200 错误  
+  通常是由于 MbedTLS 帧长度过小，请增加 MbedTLS 帧长度，参考第二章节。
+
+## 6、 联系方式 & 感谢
+
+- 维护： Murphy
+- 主页： https://github.com/RT-Thread-packages/ali-iotkit

@@ -1,24 +1,16 @@
 # 工作原理
 
-**mbedtls** 软件包是对 SSL/TLS 协议的实现。SSL（安全套接层）和 TLS（传输安全层）均是为了保证传输过程中信息的安全，是在明文传输基础上进行的加密，然后以密文的形式传输数据。
+iotkit SDK 为了方便设备上云封装了丰富的连接协议，如 MQTT、CoAP、HTTP、TLS，并且对硬件平台进行了抽象，使其不收具体的硬件平台限制而更加灵活。
 
-mbedTLS 建立安全通信连接需要经过以下几个步骤：
+通常用户并不需要关心 SDK 底层的实现机制，而只需要了解设备如何通过 SDK 与云端进行数据交互即可，方便用户理解如何使用应用层 API 接口进行业务逻辑编写。这里举例展示了 MQTT 和 OTA 应用的数据交互流程。
 
-- 初始化 SSL/TLS 上下文
-- 建立 SSL/TLS 握手
-- 发送、接收数据
-- 交互完成，关闭连接
+## MQTT 数据交互流程
 
-其中，最关键的步骤就是 **SSL/TLS 握手** 连接的建立，这里需要进行证书校验。
+![MQTT 数据交互流程](./figures/AliLinkPlatformMQTTSequence.png)
 
-## SSL/TLS 握手流程
+## OTA 数据交互流程
 
-![SSL/TLS 握手交互流程](./figures/mbedtlsHandShake.png)
+以 MQTT 通道为例，固件升级流程如下图所示：
 
-## DTLS 握手流程
+![OTA 固件升级流程](./figures/AliLinkDevelopOTAPrecess.png)
 
-为了避免拒绝服务攻击，DTLS采用和IKE一样的无状态 cookie 技术。当客户端发送 client hello 消息后，服务器发送 HelloVerifyRequest 消息，这个消息包含了无状态 cookie。客户端收到之后必须重传添加上了 cookie 的 clienthello。
-
-DTLS 握手流程如下图所示：
-
-![DTLS 握手流程](./figures/mbedtlsHandShakeDTLS.png)

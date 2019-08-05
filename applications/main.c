@@ -22,6 +22,8 @@ static int dev_old_flag;
 #include <fal.h>
 #define FS_PARTITION_NAME   			"elmfs"
 
+#include <easyflash.h>
+
 #define LOG_TAG                        	"app.main"
 #include <app_log.h>
 
@@ -35,7 +37,7 @@ int fs_init(void)
 	/* partition initialized */
 	fal_init();
     /* easyflash initialized */
-//    easyflash_init();
+    easyflash_init();
 
 	/* Create a block device on the file system partition of spi flash */
     struct rt_device *flash_dev = fal_blk_device_create(FS_PARTITION_NAME);

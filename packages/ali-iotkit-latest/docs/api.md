@@ -1,493 +1,154 @@
 
 # API 说明
 
-为了方便用户使用，这里列出了常用的 API，并给出了相关的使用说明。
-
-> 注：更多详细 API 内容请参阅 [**ARM mbedtls API 手册**](https://tls.mbed.org/api/)。
-
-## 应用层 API
-
-应用层 API 是提供给用户在 App 中直接使用的 API，这部分 API 屏蔽了 mbedtls 内部具体的操作步骤，简化了用户使用。
-
-### mbedtls 初始化
-
-```c
-int mbedtls_client_init(MbedTLSSession *session, void *entropy, size_t entropyLen);
-```
-
-mbedtls 客户端初始化函数，用于初始化底层网络接口、设置证书、设置 SSL 会话等。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| entropy        | 入参，mbedtls 熵字符串 |
-| entropyLen     | 入参，mbedtls 熵字符串长度 |
-| **返回**       | **描述**  |
-| `= 0`          | 成功 |
-| `!0`           | 失败 |
-
-### 配置 mbedtls 上下文
-
-```c
-int mbedtls_client_context(MbedTLSSession *session);
-```
-
-SSL 层配置，应用程序使用 `mbedtls_client_context` 函数配置客户端上下文信息，包括证书解析、设置主机名、设置默认 SSL 配置、设置认证模式（默认 MBEDTLS_SSL_VERIFY_OPTIONAL）等。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| **返回**       | **描述**  |
-| `= 0`         | 成功 |
-| `!0`          | 失败 |
-
-### 建立 SSL/TLS 连接
-
-```c
-int mbedtls_client_connect(MbedTLSSession *session);
-```
-
-使用 `mbedtls_client_connect` 函数为 SSL/TLS 连接建立通道。这里包含整个的握手连接过程，以及证书校验结果。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| **返回**       | **描述**  |
-| `= 0`          | 成功 |
-| `!0`           | 失败 |
-
-### 读取数据
-
-- **向加密连接写入数据**
-
-```c
-int mbedtls_client_write(MbedTLSSession *session, const unsigned char *buf , size_t len);
-```
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| buf            | 入参，待写入的数据缓冲区 |
-| len            | 入参，待写入的数据长度 |
-| **返回**       | **描述**  |
-| `= 0`          | 成功 |
-| `!0`           | 失败 |
-
-- **从加密连接读取数据**
-
-```c
-int mbedtls_client_read(MbedTLSSession *session, unsigned char *buf , size_t len);
-```
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| buf            | 入参，mbedtls 读取内容的缓冲区 |
-| len            | 入参，mbedtls 待读取内容长度 |
-| **返回**       | **描述**  |
-| `= 0`          | 成功 |
-| `!0`           | 失败 |
-
-### 关闭 mbedtls 客户端
-
-```c
-int mbedtls_client_close(MbedTLSSession *session);
-```
-
-客户端主动关闭连接或者因为异常错误关闭连接，都需要使用 `mbedtls_client_close` 关闭连接并释放资源。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| session        | 入参，mbedtls 会话对象 MbedTLSSession |
-| **返回**       | **描述**  |
-| `= 0`          | 成功 |
-| `!0`             | 失败 |
-
-## mbedtls 相关 API
-
-### 设置调试级别
-
-```c
-void mbedtls_debug_set_threshold( int threshold );
-```
-
-如果开启了 `MBEDTLS_DEBUG_C`，可以使用该函数设置调试级别，用于控制不同级别的调试日志输出。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| threshold      | 入参，Debug 级别，默认为 0 没有调试日志 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-mbedtls 定义了 5 种调试级别，如下所示：
-
-| 调试级别        | 描述    |
-| :-----         | :-----  |
-| 0              | No debug |
-| 1              | Error |
-| 2              | State change |
-| 3              | Informational |
-| 4              | Verbose |
-
-### 初始化阶段相关 API
-
-- **网络上下文初始化**
-
-```c
-void mbedtls_net_init( mbedtls_net_context *ctx );
-```
-
-初始化 TLS 网络上下文，目前只有 fd 描述符。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ctx            | 入参，网络上下文对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **SSL 上下文初始化**
-
-```c
-void mbedtls_ssl_init( mbedtls_ssl_context *ssl );
-```
-
-SSL 上下文初始化，主要是清空 SSL 上下文对象，为 SSL 连接做准备。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **初始化 SSL 配置**
-
-```c
-void mbedtls_ssl_config_init( mbedtls_ssl_config *conf );
-```
-
-SSL 配置初始化，主要是清空 SSL 配置结构体对象，为 SSL 连接做准备。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| conf            | 入参，SSL 配置结构体对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **初始化 SSL 随机字节发生器**
-
-```c
-void mbedtls_ctr_drbg_init( mbedtls_ctr_drbg_context *ctx );
-```
-
-清空 CTR_DRBG（SSL 随机字节发生器）上下文结构体对象，为 `mbedtls_ctr_drbg_seed` 做准备。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ctx            | 入参，CTR_DRBG 结构体对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **初始化 SSL 熵**
-
-```c
-void mbedtls_entropy_init( mbedtls_entropy_context *ctx );
-```
-
-初始化 SSL 熵结构体对象。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ctx            | 入参，熵结构体对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **设置 SSL/TLS 熵源**
-
-```c
-int mbedtls_ctr_drbg_seed( mbedtls_ctr_drbg_context *ctx,
-                   int (*f_entropy)(void *, unsigned char *, size_t),
-                   void *p_entropy,
-                   const unsigned char *custom,
-                   size_t len );
-```
-
-为 SSL/TLS 熵设置熵源，方便产生子种子。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ctx            | 入参，CTR_DRBG 结构体对象 |
-| f_entropy      | 入参，熵回调 |
-| p_entropy      | 入参，熵结构体（mbedtls_entropy_context）对象 |
-| custom         | 入参，个性化数据（设备特定标识符），可以为空 |
-| len            | 个性化数据长度 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **设置根证书列表**
-
-```c
-void mbedtls_x509_crt_init( mbedtls_x509_crt *crt );
-```
-
-初始化根证书链表。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| crt            | 入参，x509 证书结构体对象 |
-| **返回**       | **描述**  |
-| 无             | 无 |
-
-- **解析根证书**
-
-```c
-int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, size_t buflen );
-```
-
-解释性地解析。解析 buf 中一个或多个证书并将其添加到根证书链接列表中。如果可以解析某些证书，则结果是它遇到的失败证书的数量。 如果没有正确完成，则返回第一个错误。
-
-根证书位于 `ports/src/tls_certificate.c` 文件 `mbedtls_root_certificate` 数组中。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| chain          | 入参，x509 证书结构体对象 |
-| buf            | 入参，存储根证书的 buffer，`mbedtls_root_certificate` 数组 |
-| buflen         | 入参，存储根证书的 buffer 大小 |
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **设置主机名**
-
-```c
-int mbedtls_ssl_set_hostname( mbedtls_ssl_context *ssl, const char *hostname );
-```
-
-注意，这里设置的 `hostname` 必须对应服务器证书中的 `common name`，即 CN 字段。
-
-- **加载默认的 SSL 配置**
-
-```c
-int mbedtls_ssl_config_defaults( mbedtls_ssl_config *conf,
-                                 int endpoint, int transport, int preset );
-```
-
-使用前，需要先调用 `mbedtls_ssl_config_init` 函数初始化 SSL 配置结构体对象。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| conf           | 入参，SSL 配置结构体对象 |
-| endpoint       | 入参，MBEDTLS_SSL_IS_CLIENT 或者 MBEDTLS_SSL_IS_SERVER |
-| transport      | 入参，TLS: MBEDTLS_SSL_TRANSPORT_STREAM; DTLS: MBEDTLS_SSL_TRANSPORT_DATAGRAM |
-| preset         | 入参， 预定义的 MBEDTLS_SSL_PRESET_XXX 类型值，默认使用 MBEDTLS_SSL_PRESET_DEFAULT |
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **设置证书验证模式**
-
-```c
-void mbedtls_ssl_conf_authmode( mbedtls_ssl_config *conf, int authmode );
-```
-
-设置证书验证模式默认值：服务器上为 `MBEDTLS_SSL_VERIFY_NONE`，客户端上为 `MBEDTLS_SSL_VERIFY_REQUIRED` 或者 `MBEDTLS_SSL_VERIFY_OPTIONAL`（默认使用）。
-
-`MBEDTLS_SSL_VERIFY_OPTIONAL` 表示证书验证失败也可以继续通讯。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| conf           | 入参，SSL 配置结构体对象 |
-| authmode       | 入参，证书验证模式 |
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **设置验证对等证书所需的数据**
-
-```c
-void mbedtls_ssl_conf_ca_chain( mbedtls_ssl_config *conf,
-                                mbedtls_x509_crt *ca_chain,
-                                mbedtls_x509_crl *ca_crl );
-```
-
-将受信的证书链配置到 SSL 配置结构体对象中。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| conf           | 入参，SSL 配置结构体对象 |
-| ca_chain       | 入参，受信的 CA 证书链，存储在 MbedTLSSession 的成员对象 cacert 中 |
-| ca_crl         | 入参，受信的 CA CRLs，可为空|
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **设置随机数生成器回调**
-
-```c
-void mbedtls_ssl_conf_rng( mbedtls_ssl_config *conf,
-                           int (*f_rng)(void *, unsigned char *, size_t),
-                           void *p_rng );
-```
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| conf           | 入参，SSL 配置结构体对象 |
-| f_rng          | 入参，随机数生成器函数 |
-| p_rng          | 入参，随机数生成器函数参数 |
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **设置 SSL 上下文**
-
-```c
-int mbedtls_ssl_setup( mbedtls_ssl_context *ssl,
-                       const mbedtls_ssl_config *conf );
-```
-
-将 SSL 配置结构体对象设置到 SSL 上下文中。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| conf           | 入参，SSL 配置结构体对象 |
-| **返回**       | **描述** |
-| `= 0`          | 成功 |
-| `- 0x7F00`     | 内存分配失败 |
-
-### 连接阶段相关 API
-
-```c
-int mbedtls_net_connect( mbedtls_net_context *ctx,
-                         const char *host, const char *port,
-                         int proto );
-```
-
-与给定的 `host`、`port` 及 `proto` 协议建立网络连接。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ctx            | 入参，NET 网络配置结构体对象 |
-| host           | 入参，指定的待连接主机名 |
-| port           | 入参，指定的主机端口号 |
-| proto          | 入参，指定的协议类型，MBEDTLS_NET_PROTO_TCP 或者 MBEDTLS_NET_PROTO_UDP |
-| **返回**       | **描述** |
-| `= 0`          | 成功 |
-| `- 0x0042`     | socket 创建失败 |
-| `- 0x0052`     | 未知的主机名，DNS 解析失败 |
-| `- 0x0044`     | 网络连接失败 |
-
-- **设置网络层读写接口**
-
-```c
-void mbedtls_ssl_set_bio( mbedtls_ssl_context *ssl,
-                          void *p_bio,
-                          mbedtls_ssl_send_t *f_send,
-                          mbedtls_ssl_recv_t *f_recv,
-                          mbedtls_ssl_recv_timeout_t *f_recv_timeout );
-```
-
-为网络层设置读写函数，被 `mbedtls_ssl_read` 和 `mbedtls_ssl_write` 函数调用。
-
-- 对于 TLS，用户提供 f_recv 和 f_recv_timeout 其中之一即可，如果都有提供，默认使用 `f_recv_timeout` 回调
-- 对于 DTLS，用户需要提供 `f_recv_timeout` 回调函数
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| p_bio          | 入参，socket 描述符 |
-| f_send          | 入参，网络层写回调函数 |
-| f_recv          | 入参，网络层读回调函数 |
-| f_recv_timeout          | 入参，网络层非阻塞带超时读回调函数 |
-| **返回**       | **描述** |
-| 无             | 无 |
-
-- **SSL/TLS 握手接口**
-
-```c
-int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl );
-```
-
-执行 SSL/TLS 握手操作。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| **返回**       | **描述** |
-| `= 0`          | 成功 |
-| `- 0x6900`     | SSL 客户端需要读取调用 |
-| `- 0x6880`     | SSL 客户端需要写入调用 |
-| `- 0x6A80`     | DTLS 客户端必须重试才能进行 hello 验证 |
-| 其它            | 其它 SSL 指定的错误码 |
-
-注意，如果您使用的是 DTLS，你需要单独处理 `- 0x6A80` 错误，因为它是预期的返回值而不是实际错误。
-
-- **获取证书验证结果**
-
-```c
-uint32_t mbedtls_ssl_get_verify_result( const mbedtls_ssl_context *ssl );
-```
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| **返回**       | **描述** |
-| `= 0`          | 成功 |
-| `- 1`          | 返回结果不可用 |
-| 其它           | BADCERT_xxx 和 BADCRL_xxx 标志的组合，请参阅 x509.h |
-
-或者证书验证结果的 API 接口，具体的错误信息需要使用 `mbedtls_x509_crt_verify_info` 接口获取。
-
-```c
-int mbedtls_x509_crt_verify_info( char *buf, size_t size,
-                                  const char *prefix,
-                                  uint32_t flags );
-```
-
-使用 `mbedtls_x509_crt_verify_info` 函数获取有关证书验证状态的信息字符串，存储在 MbedTLSSession 的对象的 buffer 成员中。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| buf            | 入参，存储验证状态信息字符串的缓冲区 |
-| size           | 入参，缓冲区大小 |
-| prefix         | 入参，行前缀 |
-| flags          | 入参，由 mbedtls_x509_crt_verify_info 函数返回的值 |
-| **返回**       | **描述** |
-| 整数           | 写入的字符串的长度（不包括结束符）或负的错误代码 |
-
-### 读写 API
-
-**SSL/TLS 写函数**
-
-```c
-int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len );
-```
-
-从 SLL/TLS 读取数据，最多读取 'len' 字节长度数据字节。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| buf            | 入参，接收读取数据的缓冲区 |
-| len            | 入参，要读取的数据长度 |
-| **返回**       | **描述** |
-| `> 0`          | 读取到的数据长度 |
-| `= 0`          | 读取到结束符 |
-| `- 0x6900`     | SSL 客户端需要读取调用 |
-| `- 0x6880`     | SSL 客户端需要写入调用 |
-| `- 0x6780`     | SSL 客户端需要重连 |
-| 其它           | 其它 SSL 指定的错误码 |
-
-**SSL/TLS 读函数**
-
-```c
-int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len );
-```
-
-向 SSL/TLS 写入数据，最多写入 'len' 字节长度数据。
-
-| 参数           | 描述    |
-| :-----         | :-----  |
-| ssl            | 入参，SSL 上下文结构体对象 |
-| buf            | 入参，待写入数据的缓冲区 |
-| len            | 入参，待写入数据的长度 |
-| **返回**       | **描述** |
-| `> 0`          | 实际写入的数据长度 |
-| `= 0`          | 读取到结束符 |
-| `- 0x6900`     | SSL 客户端需要读取调用 |
-| `- 0x6880`     | SSL 客户端需要写入调用 |
-| 其它           | 其它 SSL 指定的错误码 |
+**ali-iotkit** 是 RT-Thread 移植的用于连接阿里云 IoT 平台的软件包。基础 SDK 是阿里提供的 [**iotkit-embedded C-SDK**](https://github.com/aliyun/iotkit-embedded)。
+
+这里引用阿里 **iotkit-embedded** API 使用说明，内容如下。
+
+注：以下的 API 描述信息来自阿里云，更多详细内容请参阅 [iotkit-embedded **wiki**](https://github.com/aliyun/iotkit-embedded/wiki)。
+
+## 必选 API
+
+|**序号**  |**函数名** |**说明**  |
+|:- | :------ |:------|
+| 1 | IOT_OpenLog | 开始打印日志信息(log), 接受一个 `const char *` 为入参, 表示模块名字    |
+| 2 | IOT_CloseLog | 停止打印日志信息(log), 入参为空                                  |
+| 3 | IOT_SetLogLevel | 设置打印的日志等级, 接受入参从1到5, 数字越大, 打印越详细           |
+| 4 | IOT_DumpMemoryStats | 调试函数, 打印内存的使用统计情况, 入参为1-5, 数字越大, 打印越详细  |
+
+
+## MQTT 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_SetupConnInfo            | MQTT连接前的准备, 基于`DeviceName + DeviceSecret + ProductKey`产生MQTT连接的用户名和密码等 |
+|  2    | IOT_SetupConnInfoSecure      | MQTT连接前的准备, 基于`ID2 + DeviceSecret + ProductKey`产生MQTT连接的用户名和密码等,ID2模式启用|
+|  3    | IOT_MQTT_CheckStateNormal    | MQTT连接后, 调用此函数检查长连接是否正常                                       |
+|  4    | IOT_MQTT_Construct           | MQTT实例的构造函数, 入参为`iotx_mqtt_param_t`结构体, 连接MQTT服务器, 并返回被创建句柄 |
+|  5    | IOT_MQTT_ConstructSecure     | MQTT实例的构造函数, 入参为`iotx_mqtt_param_t`结构体, 连接MQTT服务器, 并返回被创建句柄 ，ID2模式启用|
+|  6    | IOT_MQTT_Destroy             | MQTT实例的摧毁函数, 入参为`IOT_MQTT_Construct()`创建的句柄                     |
+|  7    | IOT_MQTT_Publish             | MQTT会话阶段, 组织一个完整的`MQTT Publish`报文, 向服务端发送消息发布报文       |
+|  8    | IOT_MQTT_Subscribe           | MQTT会话阶段, 组织一个完整的`MQTT Subscribe`报文, 向服务端发送订阅请求         |
+|  9    | IOT_MQTT_Unsubscribe         | MQTT会话阶段, 组织一个完整的`MQTT UnSubscribe`报文, 向服务端发送取消订阅请求   |
+|  10   | IOT_MQTT_Yield               | MQTT会话阶段, MQTT主循环函数, 内含了心跳的维持, 服务器下行报文的收取等         |
+
+
+## CoAP 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_CoAP_Init                | CoAP实例的构造函数, 入参为`iotx_coap_config_t`结构体, 返回创建的CoAP会话句柄   |
+|  2    | IOT_CoAP_Deinit              | CoAP实例的摧毁函数, 入参为`IOT_CoAP_Init()`所创建的句柄                        |
+|  3    | IOT_CoAP_DeviceNameAuth      | 基于控制台申请的`DeviceName`, `DeviceSecret`, `ProductKey`做设备认证           |
+|  4    | IOT_CoAP_GetMessageCode      | CoAP会话阶段, 从服务器的`CoAP Response`报文中获取`Respond Code`                |
+|  5    | IOT_CoAP_GetMessagePayload   | CoAP会话阶段, 从服务器的`CoAP Response`报文中获取报文负载                      |
+|  6    | IOT_CoAP_SendMessage         | CoAP会话阶段, 连接已成功建立后调用, 组织一个完整的CoAP报文向服务器发送         |
+|  7    | IOT_CoAP_Yield               | CoAP会话阶段, 连接已成功建立后调用, 检查和收取服务器对`CoAP Request`的回复报文 |
+
+## HTTP 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_HTTP_Init                | Https实例的构造函数, 创建一个HTTP会话的句柄并返回                                      |
+|  2    | IOT_HTTP_DeInit              | Https实例的摧毁函数, 销毁所有相关的数据结构                                            |
+|  3    | IOT_HTTP_DeviceNameAuth      | 基于控制台申请的`DeviceName`, `DeviceSecret`, `ProductKey`做设备认证                   |
+|  4    | IOT_HTTP_SendMessage         | Https会话阶段, 组织一个完整的HTTP报文向服务器发送,并同步获取HTTP回复报文               |
+|  5    | IOT_HTTP_Disconnect          | Https会话阶段, 关闭HTTP层面的连接, 但是仍然保持TLS层面的连接                           |
+
+## OTA 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------ |:------|
+|  1    | IOT_OTA_Init                 | OTA实例的构造函数, 创建一个OTA会话的句柄并返回                                         |
+|  2    | IOT_OTA_Deinit               | OTA实例的摧毁函数, 销毁所有相关的数据结构                                              |
+|  3    | IOT_OTA_Ioctl                | OTA实例的输入输出函数, 根据不同的命令字可以设置OTA会话的属性, 或者获取OTA会话的状态    |
+|  4    | IOT_OTA_GetLastError         | OTA会话阶段, 若某个`IOT_OTA_*()`函数返回错误, 调用此接口可获得最近一次的详细错误码     |
+|  5    | IOT_OTA_ReportVersion        | OTA会话阶段, 向服务端汇报当前的固件版本号                                              |
+|  6    | IOT_OTA_FetchYield           | OTA下载阶段, 在指定的`timeout`时间内, 从固件服务器下载一段固件内容, 保存在入参buffer中 |
+|  7    | IOT_OTA_IsFetchFinish        | OTA下载阶段, 判断迭代调用`IOT_OTA_FetchYield()`是否已经下载完所有的固件内容            |
+|  8    | IOT_OTA_IsFetching           | OTA下载阶段, 判断固件下载是否仍在进行中, 尚未完成全部固件内容的下载                    |
+|  9    | IOT_OTA_ReportProgress       | 可选API, OTA下载阶段, 调用此函数向服务端汇报已经下载了全部固件内容的百分之多少         |
+|  10   | IOT_OTA_RequestImage         | 可选API，向服务端请求固件下载                                                          |
+|  11   | IOT_OTA_GetConfig            | 可选API，向服务端请求远程配置                                                          |
+
+## 云端连接 Cloud Connection 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_Cloud_Connection_Init    | 云端连接实例的构造函数, 入参为`iotx_cloud_connection_param_pt`结构体, 返回创建的云端连接会话句柄   |
+|  2    | IOT_Cloud_Connection_Deinit  | 云端连接实例的摧毁函数, 入参为`IOT_Cloud_Connection_Init()`所创建的句柄                        |
+|  3    | IOT_Cloud_Connection_Send_Message      | 发送数据给云端           |
+|  4    | IOT_Cloud_Connection_Yield   | 云端连接成功建立后，收取服务器发送的报文                |
+
+## CMP 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_CMP_Init                 | CMP实例的构造函数, 入参为`iotx_cmp_init_param_pt`结构体，只存在一个CMP实例     |
+|  2    | IOT_CMP_Register             | 通过CMP订阅服务                                                                |
+|  3    | IOT_CMP_Unregister           | 通过CMP取消服务订阅                                                            |
+|  4    | IOT_CMP_Send                 | 通过CMP发送数据，可以送给云端，也可以送给本地设备                              |
+|  5    | IOT_CMP_Send_Sync            | 通过CMP同步发送数据   ，暂不支持                                               |
+|  6    | IOT_CMP_Yield                | 通过CMP接收数据，单线程情况下才支持                                            |
+|  7    | IOT_CMP_Deinit               | CMP示例的摧毁函数                                                              |
+|  8    | IOT_CMP_OTA_Start            | 初始化ota功能，上报版本                                                        |
+|  9    | IOT_CMP_OTA_Set_Callback     | 设置OTA回调函数                                                                |
+|  10   | IOT_CMP_OTA_Get_Config       | 获取远程配置                                                                   |
+|  11   | IOT_CMP_OTA_Request_Image    | 获取固件                                                                       |
+|  12   | IOT_CMP_OTA_Yield            | 通过CMP完成OTA功能                                                             |
+
+
+## 设备影子相关(可选功能) API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_Shadow_Construct            | 建立一个设备影子的MQTT连接, 并返回被创建的会话句柄                              |
+|  2    | IOT_Shadow_Destroy              | 摧毁一个设备影子的MQTT连接, 销毁所有相关的数据结构, 释放内存, 断开连接          |
+|  3    | IOT_Shadow_Pull                 | 把服务器端被缓存的JSON数据下拉到本地, 更新本地的数据属性                        |
+|  4    | IOT_Shadow_Push                 | 把本地的数据属性上推到服务器缓存的JSON数据, 更新服务端的数据属性                |
+|  5    | IOT_Shadow_Push_Async           | 和`IOT_Shadow_Push()`接口类似, 但是异步的, 上推后便返回, 不等待服务端回应       |
+|  6    | IOT_Shadow_PushFormat_Add       | 向已创建的数据类型格式中增添成员属性                                            |
+|  7    | IOT_Shadow_PushFormat_Finalize  | 完成一个数据类型格式的构造过程                                                  |
+|  8    | IOT_Shadow_PushFormat_Init      | 开始一个数据类型格式的构造过程                                                  |
+|  9    | IOT_Shadow_RegisterAttribute    | 创建一个数据类型注册到服务端, 注册时需要`*PushFormat*()`接口创建的数据类型格式  |
+| 10    | IOT_Shadow_DeleteAttribute      | 删除一个已被成功注册的数据属性                                                  |
+| 11    | IOT_Shadow_Yield                | MQTT的主循环函数, 调用后接受服务端的下推消息, 更新本地的数据属性                |
+
+## 主子设备相关(可选功能) API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | IOT_Gateway_Construct           | 建立一个主设备，建立MQTT连接, 并返回被创建的会话句柄                            |
+|  2    | IOT_Gateway_Destroy             | 摧毁一个主设备的MQTT连接, 销毁所有相关的数据结构, 释放内存, 断开连接            |
+|  3    | IOT_Subdevice_Login             | 子设备上线，通知云端建立子设备session                                           |
+|  4    | IOT_Subdevice_Logout            | 子设备下线，销毁云端建立子设备session及所有相关的数据结构, 释放内存             |
+|  5    | IOT_Gateway_Yield               | MQTT的主循环函数, 调用后接受服务端的下推消息                                    |
+|  6    | IOT_Gateway_Subscribe           | 通过MQTT连接向服务端发送订阅请求                                                |
+|  7    | IOT_Gateway_Unsubscribe         | 通过MQTT连接向服务端发送取消订阅请求                                            |
+|  8    | IOT_Gateway_Publish             | 通过MQTT连接服务端发送消息发布报文                                              |
+|  9    | IOT_Gateway_RRPC_Register       | 注册设备的RRPC回调函数，接收云端发起的RRPC请求                                  |
+| 10    | IOT_Gateway_RRPC_Response       | 对云端的RRPC请求进行应答                                                        |
+| 11    | IOT_Gateway_Generate_Message_ID | 生成消息id                                                                      |
+| 12    | IOT_Gateway_Get_TOPO            | 向topo/get topic发送包并等待回复（TOPIC_GET_REPLY 回复）                        |
+| 13    | IOT_Gateway_Get_Config          | 向conifg/get topic发送包并等待回复（TOPIC_CONFIG_REPLY 回复）                   |
+| 14    | IOT_Gateway_Publish_Found_List  | 发现设备列表上报                                                                |
+
+## linkkit 功能相关 API
+
+|**序号**  |**函数名**   |**说明**   |
+|:-  | :------- |:------|
+|  1    | linkkit_start                   | 启动 linkkit 服务，与云端建立连接并安装回调函数                                 |
+|  2    | linkkit_end                     | 停止 linkkit 服务，与云端断开连接并回收资源                                     |
+|  3    | linkkit_dispatch                | 事件分发函数,触发 linkkit_start 安装的回调                                      |
+|  4    | linkkit_yield                   | linkkit 主循环函数，内含了心跳的维持, 服务器下行报文的收取等;如果允许多线程，请不要调用此函数     |
+|  5    | linkkit_set_value               | 根据identifier设置物对象的 TSL 属性，如果标识符为struct类型、event output类型或者service output类型，使用点'.'分隔字段；例如"identifier1.identifier2"指向特定的项    |
+|  6    | linkkit_get_value               | 根据identifier获取物对象的 TSL 属性                                             |
+|  7    | linkkit_set_tsl                 | 从本地读取 TSL 文件,生成物的对象并添加到 linkkit 中                             |
+|  8    | linkkit_answer_service          | 对云端服务请求进行回应                                                          |
+|  9    | linkkit_invoke_raw_service      | 向云端发送裸数据                                                                |
+| 10    | linkkit_trigger_event           | 上报设备事件到云端                                                              |
+| 11    | linkkit_fota_init               | 初始化 OTA-fota 服务，并安装回调函数(需编译设置宏 SERVICE_OTA_ENABLED )              |
+| 12    | linkkit_invoke_fota_service     | 执行fota服务                                                                    |
+| 13    | linkkit_fota_init               | 初始化 OTA-cota 服务，并安装回调函数(需编译设置宏 SERVICE_OTA_ENABLED SERVICE_COTA_ENABLED )     |
+| 14    | linkkit_invoke_cota_get_config  | 设备请求远程配置                                                                    |
+| 15    | linkkit_invoke_cota_service     | 执行cota服务                                                                    |
