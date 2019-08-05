@@ -1,0 +1,9 @@
+.\build\keil\obj\infra_md5.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_md5.c
+.\build\keil\obj\infra_md5.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_config.h
+.\build\keil\obj\infra_md5.o: .\rtconfig.h
+.\build\keil\obj\infra_md5.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\build\keil\obj\infra_md5.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\build\keil\obj\infra_md5.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_md5.h
+.\build\keil\obj\infra_md5.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_types.h
+.\build\keil\obj\infra_md5.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+.\build\keil\obj\infra_md5.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
