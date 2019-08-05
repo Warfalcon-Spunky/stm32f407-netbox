@@ -4,7 +4,7 @@ import rtconfig
 
 cwd     = GetCurrentDir()
 src     = Glob('src/*.c')
-CPPPATH = [cwd + '/inc']
+CPPPATH = [cwd + '/inc', cwd + '/samples/porting']
 LOCAL_CCFLAGS = ''
 
 if GetDepend(['FAL_USING_SFUD_PORT']):

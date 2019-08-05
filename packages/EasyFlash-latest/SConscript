@@ -4,6 +4,7 @@ from building import *
 cwd     = GetCurrentDir()
 # The set of source files associated with this SConscript file.
 src     = Glob('src/*.c')
+src    += Glob('ports/ef_fal_port.c')
 
 path    = [cwd + '/inc']
 

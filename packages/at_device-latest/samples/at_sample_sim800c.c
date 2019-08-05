@@ -24,7 +24,7 @@
 
 #include <at_device_sim800c.h>
 
-#define LOG_TAG                        "at.sample"
+#define LOG_TAG                        "at.app"
 #include <at_log.h>
 
 #define SIM800C_SAMPLE_DEIVCE_NAME     "sim0"
