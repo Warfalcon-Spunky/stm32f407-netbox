@@ -24,6 +24,8 @@
 
 #include <fal.h>
 #include <sfud.h>
+#include <drv_gpio.h>
+#include <drv_spi.h>
 
 #ifdef FAL_USING_SFUD_PORT
 #ifdef RT_USING_SFUD
@@ -40,7 +42,7 @@ static int write(long offset, const uint8_t *buf, size_t size);
 static int erase(long offset, size_t size);
 
 static sfud_flash_t sfud_dev = NULL;
-struct fal_flash_dev nor_flash0 = {FAL_USING_NOR_FLASH_DEV_NAME, 0, 8 * 1024 * 1024, 4096, {init, read, write, erase}};
+struct fal_flash_dev nor_flash0 = {FAL_USING_NOR_FLASH_DEV_NAME, 0, 16 * 1024 * 1024, 4096, {init, read, write, erase}};
 
 static int init(void)
 {
@@ -98,5 +100,26 @@ static int erase(long offset, size_t size)
 
     return size;
 }
+
+int sfud_nor_flash_init(void)
+{
+	const struct pin_index *cs_pin;
+	
+	extern const struct pin_index *get_pin(uint8_t pin);
+	
+	cs_pin = get_pin(BSP_DATAFALSH_CS_PIN);
+	if (cs_pin != RT_NULL)
+	{
+		rt_hw_spi_device_attach("spi1", NOR_FLASH_SPI_DEV_NAME, cs_pin->gpio, cs_pin->pin);
+		if (rt_sfud_flash_probe(FAL_USING_NOR_FLASH_DEV_NAME, NOR_FLASH_SPI_DEV_NAME) == RT_NULL)
+		{
+			return -RT_ERROR;
+		}
+		return RT_EOK;
+	}
+	
+	return -RT_ERROR;
+}
+INIT_DEVICE_EXPORT(sfud_nor_flash_init);
 #endif /* FAL_USING_SFUD_PORT */
 

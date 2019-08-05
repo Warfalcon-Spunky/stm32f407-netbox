@@ -9,6 +9,8 @@ LOCAL_CCFLAGS = ''
 
 if GetDepend(['FAL_USING_SFUD_PORT']):
     src += Glob('samples/porting/fal_flash_sfud_port.c')
+if GetDepend(['FAL_USING_SFUD_PORT']):
+    src += Glob('samples/porting/fal_flash_stm32f4_port.c')
 
 if rtconfig.CROSS_TOOL == 'gcc':
     LOCAL_CCFLAGS += ' -std=c99'

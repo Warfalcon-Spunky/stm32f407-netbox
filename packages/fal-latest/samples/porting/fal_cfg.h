@@ -28,16 +28,25 @@
 #include <rtconfig.h>
 #include <board.h>
 
-#define NOR_FLASH_DEV_NAME             "norflash0"
+#define NOR_FLASH_SPI_DEV_NAME             	"nor_spi"
+
+#define STM32_FLASH_START_ADRESS_16K		((uint32_t)0x08000000) /* Base @ of Sector 0, 16 Kbytes */
+#define FLASH_SIZE_GRANULARITY_16K			(4 * 16 * 1024)
+
+#define STM32_FLASH_START_ADRESS_64K		((uint32_t)0x08010000) /* Base @ of Sector 4, 64 Kbytes */
+#define FLASH_SIZE_GRANULARITY_64K			(1 * 64 * 1024)
+
+#define STM32_FLASH_START_ADRESS_128K		((uint32_t)0x08020000) /* Base @ of Sector 5, 128 Kbytes */
+#define FLASH_SIZE_GRANULARITY_128K			(7 * 128 * 1024)
 
 /* ===================== Flash device Configuration ========================= */
-extern const struct fal_flash_dev stm32f2_onchip_flash;
+extern const struct fal_flash_dev stm32f4_onchip_flash;
 extern struct fal_flash_dev nor_flash0;
 
 /* flash device table */
 #define FAL_FLASH_DEV_TABLE                                          \
 {                                                                    \
-    &stm32f2_onchip_flash,                                           \
+    &stm32f4_onchip_flash,                                           \
     &nor_flash0,                                                     \
 }
 /* ====================== Partition Configuration ========================== */
@@ -45,10 +54,11 @@ extern struct fal_flash_dev nor_flash0;
 /* partition table */
 #define FAL_PART_TABLE                                                               \
 {                                                                                    \
-    {FAL_PART_MAGIC_WORD,        "bl",     "stm32_onchip",         0,   64*1024, 0}, \
-    {FAL_PART_MAGIC_WORD,       "app",     "stm32_onchip",   64*1024,  704*1024, 0}, \
-    {FAL_PART_MAGIC_WORD, "easyflash", NOR_FLASH_DEV_NAME,         0, 1024*1024, 0}, \
-    {FAL_PART_MAGIC_WORD,  "download", NOR_FLASH_DEV_NAME, 1024*1024, 1024*1024, 0}, \
+    {FAL_PART_MAGIC_WROD,        "app", "onchip_flash",                           0,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,       "para",    "nor_flash",                           0,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,      "image",    "nor_flash",                 1024 * 1024,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,         "dl",    "nor_flash",        (1024 + 1024) * 1024,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,      "elmfs",    "nor_flash", (1024 + 1024 + 1024) * 1024, 13 * 1024 * 1024, 0}, \
 }
 #endif /* FAL_PART_HAS_TABLE_CFG */
 
