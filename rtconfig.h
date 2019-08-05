@@ -232,6 +232,8 @@
 
 /* IoT - internet of things */
 
+#define PKG_USING_CJSON
+#define PKG_USING_CJSON_LATEST_VERSION
 #define PKG_USING_LIBMODBUS
 #define PKG_USING_LIBMODBUS_RTU
 #define HAVE_DECL_TIOCSRS485 1
