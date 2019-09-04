@@ -25,9 +25,9 @@
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_utils.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_shadow.h
+.\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm_internal.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_tsl_alink.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_message_cache.h
-.\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm_internal.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_opt.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_ota.h
 .\build\keil\obj\dm_msg_process.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_cota.h

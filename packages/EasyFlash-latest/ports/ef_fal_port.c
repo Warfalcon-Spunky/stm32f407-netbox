@@ -33,16 +33,17 @@
 #include <rthw.h>
 #include <rtthread.h>
 #include <fal.h>
+#include "mqtt-def.h"
 
 /* EasyFlash partition name on FAL partition table */
 #define FAL_EF_PART_NAME               "para"
 
 /* default ENV set for user */
 static const ef_env default_env_set[] = {
-        {"iap_need_copy_app", "0"},
-        {"iap_need_crc32_check", "0"},
-        {"iap_copy_app_size", "0"},
-        {"stop_in_bootloader", "0"},
+        /* 系统硬件信息 */
+		{ALI_DEVICE_INFO_NAME,      ALI_DEVICE_INFO_DEFAULT},
+		{ALI_DEVICE_NUM,			"2"},
+		{ALI_DEVICE_CHN_NUM,		"16"}
 };
 
 static char log_buf[RT_CONSOLEBUF_SIZE];

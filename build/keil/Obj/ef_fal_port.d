@@ -90,3 +90,4 @@
 .\build\keil\obj\ef_fal_port.o: libraries\HAL_Drivers\drv_gpio.h
 .\build\keil\obj\ef_fal_port.o: board\board.h
 .\build\keil\obj\ef_fal_port.o: packages\fal-latest\inc\fal_def.h
+.\build\keil\obj\ef_fal_port.o: applications\mqtt-def.h

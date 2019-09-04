@@ -18,4 +18,3 @@
 .\build\keil\obj\infra_compat.o: packages\ali-iotkit-latest\iotkit-embedded\src\mqtt\mqtt_api.h
 .\build\keil\obj\infra_compat.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_log.h
 .\build\keil\obj\infra_compat.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
-.\build\keil\obj\infra_compat.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm.h

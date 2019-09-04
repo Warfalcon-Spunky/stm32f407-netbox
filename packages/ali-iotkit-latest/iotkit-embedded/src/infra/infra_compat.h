@@ -16,8 +16,8 @@ typedef enum _IOT_LogLevel {
     IOT_LOG_DEBUG,
 } IOT_LogLevel;
 
-DLL_IOT_API void IOT_SetLogLevel(IOT_LogLevel level);
-DLL_IOT_API void IOT_DumpMemoryStats(IOT_LogLevel level);
+void IOT_SetLogLevel(IOT_LogLevel level);
+void IOT_DumpMemoryStats(IOT_LogLevel level);
 
 /**
  * @brief event list used for iotx_regist_event_monitor_cb
@@ -117,8 +117,8 @@ typedef enum {
 } iotx_ioctl_event_t;
 
 #define IOT_RegisterCallback(evt, cb)           iotx_register_for_##evt(cb);
-#define DECLARE_EVENT_CALLBACK(evt, cb)         DLL_IOT_API int iotx_register_for_##evt(cb);
-#define DEFINE_EVENT_CALLBACK(evt, cb)          DLL_IOT_API int iotx_register_for_##evt(cb) { \
+#define DECLARE_EVENT_CALLBACK(evt, cb)         int iotx_register_for_##evt(cb);
+#define DEFINE_EVENT_CALLBACK(evt, cb)          int iotx_register_for_##evt(cb) { \
         if (evt < 0 || evt >= sizeof(g_impl_event_map)/sizeof(impl_event_map_t)) {return -1;} \
         g_impl_event_map[evt].callback = (void *)callback;return 0;}
 
@@ -211,12 +211,6 @@ int IOT_SetupConnInfo(const char *product_key,
                       const char *device_secret,
                       void **info_ptr);
 
-typedef struct {
-    int domain_type;
-    int dynamic_register;
-    char *cloud_custom_domain;
-    char *http_custom_domain;
-} sdk_impl_ctx_t;
 
 typedef enum {
     IOTX_IOCTL_SET_REGION,              /* value(int*): iotx_cloud_region_types_t */
@@ -232,6 +226,7 @@ typedef enum {
     IOTX_IOCTL_GET_SUBDEV_LOGIN,        /* value(int*): 0 - SubDev is logout; 1 - SubDev is login */
     IOTX_IOCTL_SET_OTA_DEV_ID,          /* value(int*):     select the device to do OTA according to devid */
     IOTX_IOCTL_QUERY_DEVID,             /* value(iotx_dev_meta_info_t*): device meta info, only productKey and deviceName is required, ret value is subdev_id or -1 */
+    IOTX_IOCTL_SET_CUSTOMIZE_INFO,      /* value(char*): set mqtt clientID customize information */
 } iotx_ioctl_option_t;
 
 typedef enum {

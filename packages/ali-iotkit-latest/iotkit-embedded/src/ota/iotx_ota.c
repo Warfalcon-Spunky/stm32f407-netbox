@@ -237,6 +237,7 @@ static int ota_callback(void *pcontext, const char *msg, uint32_t msg_len, iotx_
 
         default:
             return -1;
+            break;
     }
 
     return 0;
@@ -772,7 +773,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_COTA_CONFIG_SIZE: {
             if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
                 OTA_LOG_ERROR("Invalid parameter");
@@ -783,7 +784,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_COTA_SIGN: {
             char **value = (char **)buf;
             if (value == NULL || *value != NULL || h_ota->sign == NULL) {
@@ -801,7 +802,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_COTA_SIGN_METHOD: {
             char **value = (char **)buf;
             if (value == NULL || *value != NULL || h_ota->signMethod == NULL) {
@@ -819,7 +820,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_COTA_URL: {
             char **value = (char **)buf;
             if (value == NULL || *value != NULL || h_ota->cota_url == NULL) {
@@ -837,7 +838,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_COTA_GETTYPE: {
             char **value = (char **)buf;
             if (value == NULL || *value != NULL || h_ota->getType == NULL) {
@@ -855,7 +856,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_OTA_TYPE: {
             if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
                 OTA_LOG_ERROR("Invalid parameter");
@@ -866,7 +867,7 @@ int IOT_OTA_Ioctl(void *handle, IOT_OTA_CmdType_t type, void *buf, int buf_len)
                 return 0;
             }
         }
-
+        break;
         case IOT_OTAG_FETCHED_SIZE:
             if ((4 != buf_len) || (0 != ((unsigned long)buf & 0x3))) {
                 OTA_LOG_ERROR("Invalid parameter");

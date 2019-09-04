@@ -26,7 +26,7 @@ void IOT_SetLogLevel(IOT_LogLevel level) {}
 void *HAL_Malloc(uint32_t size);
 void HAL_Free(void *ptr);
 
-static sdk_impl_ctx_t g_sdk_impl_ctx = {0};
+sdk_impl_ctx_t g_sdk_impl_ctx = {0};
 /* global variable for mqtt construction */
 static iotx_conn_info_t g_iotx_conn_info = {0};
 static char g_empty_string[1] = "";
@@ -78,14 +78,14 @@ int IOT_Ioctl(int option, void *data)
 
     switch (option) {
         case IOTX_IOCTL_SET_REGION: {
-            ctx->domain_type = *(int *)data;
+            ctx->domain_type = *(iotx_mqtt_region_types_t *)data;
             /* iotx_guider_set_region(*(int *)data); */
 
             res = SUCCESS_RETURN;
         }
         break;
         case IOTX_IOCTL_GET_REGION: {
-            *(int *)data = ctx->domain_type;
+            *(iotx_mqtt_region_types_t *)data = ctx->domain_type;
 
             res = SUCCESS_RETURN;
         }
@@ -93,13 +93,7 @@ int IOT_Ioctl(int option, void *data)
         case IOTX_IOCTL_SET_MQTT_DOMAIN: {
             ctx->domain_type = IOTX_CLOUD_REGION_CUSTOM;
 
-            if (ctx->cloud_custom_domain) {
-                HAL_Free(ctx->cloud_custom_domain);
-                ctx->cloud_custom_domain = NULL;
-                g_infra_mqtt_domain[IOTX_CLOUD_REGION_CUSTOM] = NULL;
-            }
-            ctx->cloud_custom_domain = HAL_Malloc(strlen((char *)data) + 1);
-            if (ctx->cloud_custom_domain == NULL) {
+            if (strlen(data) > IOTX_DOMAIN_MAX_LEN) {
                 return FAIL_RETURN;
             }
             memset(ctx->cloud_custom_domain, 0, strlen((char *)data) + 1);
@@ -111,13 +105,7 @@ int IOT_Ioctl(int option, void *data)
         case IOTX_IOCTL_SET_HTTP_DOMAIN: {
             ctx->domain_type = IOTX_HTTP_REGION_CUSTOM;
 
-            if (ctx->http_custom_domain) {
-                HAL_Free(ctx->http_custom_domain);
-                ctx->http_custom_domain = NULL;
-                g_infra_http_domain[IOTX_CLOUD_REGION_CUSTOM] = NULL;
-            }
-            ctx->http_custom_domain = HAL_Malloc(strlen((char *)data) + 1);
-            if (ctx->http_custom_domain == NULL) {
+            if (strlen(data) > IOTX_DOMAIN_MAX_LEN) {
                 return FAIL_RETURN;
             }
             memset(ctx->http_custom_domain, 0, strlen((char *)data) + 1);
@@ -184,6 +172,15 @@ int IOT_Ioctl(int option, void *data)
         }
         break;
 #endif
+        case IOTX_IOCTL_SET_CUSTOMIZE_INFO: {
+            if (strlen(data) > IOTX_CUSTOMIZE_INFO_LEN) {
+                return FAIL_RETURN;
+            }
+            memset(ctx->mqtt_customzie_info, 0, strlen((char *)data) + 1);
+            memcpy(ctx->mqtt_customzie_info, data, strlen((char *)data));
+            res = SUCCESS_RETURN;
+        }
+        break;
         default: {
             res = FAIL_RETURN;
         }

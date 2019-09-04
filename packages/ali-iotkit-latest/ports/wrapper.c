@@ -5,122 +5,158 @@
  * Change Logs:
  * Date          Author          Notes
  * 2019-07-21    MurphyZhao      first edit
+ * 2019-09-03    Spunky          modify information
  */
 
 #include <rtthread.h>
 #include <string.h>
 
 #include "wrappers_defs.h"
+#include "board.h"
+#include "easyflash.h"
 
-#define DBG_TAG                        "ali.tcp"
+#define DBG_TAG                        "ali.wrap"
 #define DBG_LVL                        DBG_INFO
 #include <rtdbg.h>
+#include "app_log.h"
 
-#if defined(PKG_USING_ALI_IOTKIT_PRODUCT_KEY) \
-    && defined(PKG_USING_ALI_IOTKIT_PRODUCT_SECRET) \
-    && defined(PKG_USING_ALI_IOTKIT_DEVICE_NAME) \
-    && defined(PKG_USING_ALI_IOTKIT_DEVICE_SECRET)
-char _product_key[IOTX_PRODUCT_KEY_LEN + 1]       = PKG_USING_ALI_IOTKIT_PRODUCT_KEY;
-char _product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = PKG_USING_ALI_IOTKIT_PRODUCT_SECRET;
-char _device_name[IOTX_DEVICE_NAME_LEN + 1]       = PKG_USING_ALI_IOTKIT_DEVICE_NAME;
-char _device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = PKG_USING_ALI_IOTKIT_DEVICE_SECRET;
+#if defined(PKG_USING_ALI_IOTKIT_PRODUCT_KEY)
+	#define  ALI_IOTKIT_PRODUCT_KEY			PKG_USING_ALI_IOTKIT_PRODUCT_KEY
 #else
-char _product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1wlm6xAOPf";
-char _product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "NfIdVcfBP7rtH24H";
-char _device_name[IOTX_DEVICE_NAME_LEN + 1]       = "DEV_419_ALINK_1";
-char _device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "asXuHqpF68Hqxx8nHQ077QkiikHmYJrA";
+	#define  ALI_IOTKIT_PRODUCT_KEY			""
 #endif
+
+#if defined(PKG_USING_ALI_IOTKIT_PRODUCT_SECRET)
+	#define ALI_IOTKIT_PRODUCT_SECRET		PKG_USING_ALI_IOTKIT_PRODUCT_SECRET
+#else
+	#define ALI_IOTKIT_PRODUCT_SECRET		""
+#endif
+
+static char __fm_version[IOTX_FIRMWARE_VER_LEN];
 
 int HAL_GetFirmwareVersion(char *version)
 {
     RT_ASSERT(version);
 
-    char *ver = "app-1.0.0-20180101.1000";
-    int len = strlen(ver);
+	rt_memset(__fm_version, 0x0, IOTX_FIRMWARE_VER_LEN);
+	rt_snprintf(__fm_version, sizeof(__fm_version) - 1, "os-%d:app-%s@%s", RTTHREAD_VERSION, APP_VERSION, __DATE__);
+	
+    int ver_len = strlen(__fm_version);
     memset(version, 0x0, IOTX_FIRMWARE_VER_LEN);
-    strncpy(version, ver, IOTX_FIRMWARE_VER_LEN);
-    version[len] = '\0';
+    rt_strncpy(version, __fm_version, IOTX_FIRMWARE_VER_LEN);
+    version[ver_len] = '\0';
     return strlen(version);
 }
 
 int HAL_SetProductKey(char* product_key)
 {
-    int len = strlen(product_key);
+	product_key = product_key;
+	
+    LOG_I("ProductKey is fixed [Read-only]");
 
-    if (len > IOTX_PRODUCT_KEY_LEN)
-        return -1;
-    memset(_product_key, 0x0, IOTX_PRODUCT_KEY_LEN + 1);
-    strncpy(_product_key, product_key, len);
-
-    return len;
+    return 0;
 }
 
 int HAL_SetDeviceName(char* device_name)
 {
-    int len = strlen(device_name);
+	device_name = device_name;
+	
+    LOG_I("DeviceName is fixed [Read-only]");
 
-    if (len > IOTX_DEVICE_NAME_LEN)
-        return -1;
-    memset(_device_name, 0x0, IOTX_DEVICE_NAME_LEN + 1);
-    strncpy(_device_name, device_name, len);
+    return 0;
 
-    return len;
 }
 
 int HAL_SetDeviceSecret(char* device_secret)
 {
     int len = strlen(device_secret);
-
-    if (len > IOTX_DEVICE_SECRET_LEN)
+	if (len > IOTX_DEVICE_SECRET_LEN)
+	{
+		LOG_D("DeviceSecret length exceed limit.");
         return -1;
-    memset(_device_secret, 0x0, IOTX_DEVICE_SECRET_LEN + 1);
-    strncpy(_device_secret, device_secret, len);
+	}
+
+	if (ef_set_env_blob("DeviceSecret", device_secret, len) != EF_NO_ERR)
+	{
+		LOG_D("DeviceSecret write error.");
+		return -2;
+	}
 
     return len;
 }
 
 int HAL_SetProductSecret(char* product_secret)
 {
-    int len = strlen(product_secret);
+	product_secret = product_secret;
+	
+    LOG_I("ProductSecret is fixed [Read-only]");
 
-    if (len > IOTX_PRODUCT_SECRET_LEN)
-        return -1;
-    memset(_product_secret, 0x0, IOTX_PRODUCT_SECRET_LEN + 1);
-    strncpy(_product_secret, product_secret, len);
+    return 0;
 
-    return len;
 }
 
 int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1])
 {   
-    memset(product_key, 0x0, IOTX_PRODUCT_KEY_LEN + 1);
-    strncpy(product_key, _product_key, IOTX_PRODUCT_KEY_LEN);
-
-    return strlen(product_key);
+	int len = rt_strlen(ALI_IOTKIT_PRODUCT_KEY);
+	if (len > IOTX_PRODUCT_KEY_LEN)
+	{
+		len = IOTX_PRODUCT_KEY_LEN;
+	}
+	
+	rt_memset(product_key, 0x0, IOTX_PRODUCT_KEY_LEN + 1);
+    rt_strncpy(product_key, ALI_IOTKIT_PRODUCT_KEY, len);
+    return len;
 }
 
 int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1])
 {
-    memset(product_secret, 0x0, IOTX_PRODUCT_SECRET_LEN + 1);
-    strncpy(product_secret, _product_secret, IOTX_PRODUCT_SECRET_LEN);
-
-    return strlen(product_secret);
+	int len = rt_strlen(ALI_IOTKIT_PRODUCT_SECRET);
+	if (len > IOTX_PRODUCT_SECRET_LEN)
+	{
+		len = IOTX_PRODUCT_SECRET_LEN;
+	}
+	
+	rt_memset(product_secret, 0x0, IOTX_PRODUCT_SECRET_LEN + 1);
+    rt_strncpy(product_secret, ALI_IOTKIT_PRODUCT_SECRET, len);
+    return len;
 }
 
 int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1])
 {
-    memset(device_name, 0x0, IOTX_DEVICE_NAME_LEN + 1);
-    strncpy(device_name, _device_name, IOTX_DEVICE_NAME_LEN);
+	/* DeviceName使用MCU的UID的前8个字节 */
+    rt_memset(device_name, 0x0, IOTX_DEVICE_NAME_LEN + 1);
+    rt_snprintf(device_name, IOTX_DEVICE_NAME_LEN, "%08x%08x", HAL_GetUIDw1(), HAL_GetUIDw0());
 
-    return strlen(device_name);
+    return rt_strlen(device_name);
 }
 
 int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
 {
-    memset(device_secret, 0x0, IOTX_DEVICE_SECRET_LEN + 1);
-    strncpy(device_secret, _device_secret, IOTX_DEVICE_SECRET_LEN);
+    rt_memset(device_secret, 0x0, IOTX_DEVICE_SECRET_LEN + 1);
+    int len = ef_get_env_blob("DeviceSecret", device_secret, IOTX_DEVICE_SECRET_LEN, RT_NULL);
 
-    return strlen(device_secret);
+	if (len < 0)
+	{
+		LOG_D("Read DeviceSecret Error");
+	}
+	else if (len == 0)
+	{
+		LOG_D("DeviceSecret None Configuration");
+	}
+
+	return len;
+}
+
+RT_WEAK int HAL_Kv_Set(const char *key, const void *val, int len, int sync)
+{
+	LOG_I("Kv Set... [Not implemented]");
+    return -1;
+}
+	
+RT_WEAK int HAL_Kv_Get(const char *key, void *val, int *buffer_len)
+{
+	LOG_I("Kv Get... [Not implemented]");
+    return -1;
 }
 
 RT_WEAK void HAL_Firmware_Persistence_Start(void)

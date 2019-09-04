@@ -294,13 +294,11 @@
 #define INFRA_LOG_MUTE_CRT
 #define INFRA_TIMER
 #define INFRA_JSON_PARSER
-#define INFRA_CJSON
 #define INFRA_MD5
 #define INFRA_SHA256
 #define INFRA_REPORT
 #define INFRA_HTTPC
 #define INFRA_COMPAT
-#define INFRA_CLASSIC
 #define DEV_SIGN
 #define MQTT_COMM_ENABLED
 
@@ -308,12 +306,9 @@
 
 #define MQTT_DEFAULT_IMPL
 #define MQTT_DIRECT
+#define DYNAMIC_REGISTER
 #define DEVICE_MODEL_CLASSIC
-#define LOG_REPORT_TO_CLOUD
-#define DEVICE_MODEL_ENABLED
-
-/* Device Model Configurations */
-
+#define HAL_KV
 #define SUPPORT_TLS
 #define OTA_ENABLED
 #define PKG_USING_ALI_IOTKIT_LATEST_VERSION

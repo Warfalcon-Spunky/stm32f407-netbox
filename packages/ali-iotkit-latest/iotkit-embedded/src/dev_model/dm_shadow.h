@@ -2,6 +2,9 @@
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
 
+#if defined (__CC_ARM)
+#pragma anon_unions
+#endif
 
 #if defined(DEPRECATED_LINKKIT)
 #ifndef _DM_SHADOW_H_

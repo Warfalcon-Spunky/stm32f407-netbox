@@ -17,6 +17,7 @@
     #include <netdb.h>
     #include <signal.h>
     #include <unistd.h>
+    #include <sys/time.h>
 #endif
 #include "infra_config.h"
 #include "mbedtls/error.h"
@@ -48,7 +49,6 @@ typedef struct _TLSDataParams {
 
 void *HAL_Malloc(uint32_t size);
 void HAL_Free(void *ptr);
-uint64_t HAL_UptimeMs(void);
 
 static unsigned int mbedtls_mem_used = 0;
 static unsigned int mbedtls_max_mem_used = 0;
@@ -141,7 +141,7 @@ static int ssl_deserialize_session(mbedtls_ssl_session *session,
 
 static unsigned int _avRandom()
 {
-    return (unsigned int)HAL_UptimeMs();
+    return (((unsigned int)rand() << 16) + rand());
 }
 
 static int _ssl_random(void *p_rng, unsigned char *output, size_t output_len)
@@ -304,6 +304,7 @@ static int mbedtls_net_connect_timeout(mbedtls_net_context *ctx, const char *hos
     int ret;
     struct addrinfo hints, *addr_list, *cur;
     struct timeval sendtimeout;
+    uint8_t dns_retry = 0;
 
     if ((ret = net_prepare()) != 0) {
         return (ret);
@@ -315,7 +316,18 @@ static int mbedtls_net_connect_timeout(mbedtls_net_context *ctx, const char *hos
     hints.ai_socktype = proto == MBEDTLS_NET_PROTO_UDP ? SOCK_DGRAM : SOCK_STREAM;
     hints.ai_protocol = proto == MBEDTLS_NET_PROTO_UDP ? IPPROTO_UDP : IPPROTO_TCP;
 
-    if (getaddrinfo(host, port, &hints, &addr_list) != 0) {
+    while(dns_retry++ < 8) {
+        ret = getaddrinfo(host, port, &hints, &addr_list);
+        if (ret != 0) {
+            printf("getaddrinfo error[%d], res: %s, host: %s, port: %s\n", dns_retry, gai_strerror(ret), host, port);
+            sleep(1);
+            continue;
+        }else{
+            break;
+        }
+    }
+
+    if (ret != 0) {
         return (MBEDTLS_ERR_NET_UNKNOWN_HOST);
     }
 
@@ -670,8 +682,63 @@ static int _network_ssl_read(TLSDataParams_t *pTlsData, char *buffer, int len, i
 
 static int _network_ssl_write(TLSDataParams_t *pTlsData, const char *buffer, int len, int timeout_ms)
 {
+#if defined(_PLATFORM_IS_LINUX_)
+    int32_t res = 0;
+    int32_t write_bytes = 0;
+    uint64_t timestart_ms = 0, timenow_ms = 0;
+    struct timeval timestart, timenow, timeout;
+
+    if (pTlsData == NULL) {
+        return -1;
+    }
+
+    /* timeout */
+    timeout.tv_sec = timeout_ms/1000;
+    timeout.tv_usec = (timeout_ms % 1000) * 1000;
+
+    /* Start Time */
+    gettimeofday(&timestart, NULL);
+    timestart_ms = timestart.tv_sec * 1000 + timestart.tv_usec / 1000;
+    timenow_ms = timestart_ms;
+
+    res = setsockopt(pTlsData->fd.fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    if (res < 0) {
+        return -1;
+    }
+
+    do {
+        gettimeofday(&timenow, NULL);
+        timenow_ms = timenow.tv_sec * 1000 + timenow.tv_usec / 1000;
+
+        if (timenow_ms - timestart_ms >= timenow_ms ||
+            timeout_ms - (timenow_ms - timestart_ms) > timeout_ms) {
+            break;
+        }
+
+        res = mbedtls_ssl_write(&(pTlsData->ssl), (unsigned char *)buffer + write_bytes, len - write_bytes);
+        if (res < 0) {
+            if (res != MBEDTLS_ERR_SSL_WANT_READ &&
+                res != MBEDTLS_ERR_SSL_WANT_WRITE) {
+                if (write_bytes == 0) {
+                    return -1;
+                }
+                break;
+            }
+        }else if (res == 0) {
+            break;
+        }else{
+            write_bytes += res;
+        }
+    }while(((timenow_ms - timestart_ms) < timeout_ms) && (write_bytes < len));
+
+    return write_bytes;
+#else
     uint32_t writtenLen = 0;
     int ret = -1;
+
+    if (pTlsData == NULL) {
+        return -1;
+    }
 
     while (writtenLen < len) {
         ret = mbedtls_ssl_write(&(pTlsData->ssl), (unsigned char *)(buffer + writtenLen), (len - writtenLen));
@@ -690,6 +757,7 @@ static int _network_ssl_write(TLSDataParams_t *pTlsData, const char *buffer, int
     }
 
     return writtenLen;
+#endif
 }
 
 static void _network_ssl_disconnect(TLSDataParams_t *pTlsData)
@@ -789,5 +857,4 @@ uintptr_t HAL_SSL_Establish(const char *host,
 
     return (uintptr_t)pTlsData;
 }
-
 

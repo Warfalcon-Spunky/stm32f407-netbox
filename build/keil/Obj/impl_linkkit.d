@@ -25,9 +25,9 @@
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_utils.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_shadow.h
+.\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm_internal.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_tsl_alink.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_message_cache.h
-.\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_dm_internal.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_opt.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_ota.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_cota.h
@@ -42,5 +42,3 @@
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\server\dm_server.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dm_intf.h
 .\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_log.h
-.\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\dev_model_api.h
-.\build\keil\obj\impl_linkkit.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_log_report.h

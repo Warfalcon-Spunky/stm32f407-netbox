@@ -34,4 +34,3 @@
 .\build\keil\obj\iotx_mqtt_client.o: packages\ali-iotkit-latest\iotkit-embedded\src\mqtt\impl\MQTTUnsubscribe.h
 .\build\keil\obj\iotx_mqtt_client.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_log.h
 .\build\keil\obj\iotx_mqtt_client.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
-.\build\keil\obj\iotx_mqtt_client.o: packages\ali-iotkit-latest\iotkit-embedded\src\dev_model\iotx_log_report.h

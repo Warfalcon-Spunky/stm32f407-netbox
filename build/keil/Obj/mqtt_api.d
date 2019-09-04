@@ -23,3 +23,4 @@
 .\build\keil\obj\mqtt_api.o: packages\ali-iotkit-latest\iotkit-embedded\wrappers\wrappers_defs.h
 .\build\keil\obj\mqtt_api.o: packages\ali-iotkit-latest\iotkit-embedded\src\infra\infra_log.h
 .\build\keil\obj\mqtt_api.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
+.\build\keil\obj\mqtt_api.o: packages\ali-iotkit-latest\iotkit-embedded\src\dynamic_register\dynreg_api.h

@@ -51,10 +51,6 @@
 #define DBG_LVL                        DBG_LOG
 #include <rtdbg.h>
 
-extern void *HAL_Malloc(uint32_t size);
-extern void HAL_Free(void *ptr);
-extern void HAL_Printf(const char *fmt, ...);
-
 typedef struct _TLSDataParams {
     mbedtls_ssl_context ssl;          /**< mbed TLS control context. */
     mbedtls_net_context fd;           /**< mbed TLS network context. */
@@ -63,6 +59,10 @@ typedef struct _TLSDataParams {
     mbedtls_x509_crt clicert;         /**< mbed TLS Client certification. */
     mbedtls_pk_context pkey;          /**< mbed TLS Client key. */
 } TLSDataParams_t, *TLSDataParams_pt;
+
+void HAL_Printf(const char *fmt, ...);
+void *HAL_Malloc(uint32_t size);
+void HAL_Free(void *ptr);
 
 static unsigned int _avRandom()
 {
