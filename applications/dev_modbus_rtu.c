@@ -32,7 +32,6 @@
 
 #define MODBUS_SERIAL_DEV				"/dev/uart2"
 #define MODBUS_SERIAL_BANDRATE			9600
-#define MODBUS_RS485_RE            		96
 
 #define MODBUS_REGS_ADDR				21
 #define MODBUS_ALARM_NUMS				3			/* 每个设备总共有3种报警:非法撬门报警,超时报警和过流报警 */
@@ -128,9 +127,11 @@ static void dev_modbus_thread(void *param)
 	RT_ASSERT(ctx != RT_NULL);
 
 	/* 初始化RS485方向控制引脚 */
-    rt_pin_mode(MODBUS_RS485_RE, PIN_MODE_OUTPUT);
-    modbus_rtu_set_serial_mode(ctx, MODBUS_RTU_RS485);
-    modbus_rtu_set_rts(ctx, MODBUS_RS485_RE, MODBUS_RTU_RTS_UP);
+#ifdef BSP_USING_SUB_CTRL
+    rt_pin_mode(BSP_RS485_DIR_PIN, PIN_MODE_OUTPUT);
+    modbus_rtu_set_serial_mode(ctx, BSP_RS485_DIR_PIN);
+    modbus_rtu_set_rts(ctx, BSP_RS485_DIR_PIN, MODBUS_RTU_RTS_UP);
+#endif
 
 	/* 初始化先设置为广播地址, 从机地址最大不能超过247 */
     modbus_set_slave(ctx, 0);

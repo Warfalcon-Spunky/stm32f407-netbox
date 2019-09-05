@@ -39,7 +39,6 @@
 #include <netdev.h>
 #endif /* RT_USING_NETDEV */
 
-
 #define LOG_TAG              "ali-sdk"    
 #define LOG_LVL              LOG_LVL_DBG
 #include <ulog.h>
@@ -48,14 +47,14 @@
 #define MQTT_KEEPALIVE_INTERNAL                 (60)
 #define MQTT_TOPIC_MAX_SIZE						(128)
 
+#define MQTT_MAN_INFO_STRING					"Netbox,Spunky,Radiation.Corp,2019"
+
 static char *topic_buff = RT_NULL;
 
 static void    *mqtt_client_hd  = RT_NULL;
-static uint8_t  mqtt_is_running = 0;
-static uint8_t  mqtt_timer_cnt  = 0;
+static uint8_t  is_mqtt_exit    = 0;
+static uint8_t  is_mqtt_disconnect = 1;
 static uint32_t mqtt_packet_id  = 1;
-
-static rt_sem_t mqtt_period_sem = RT_NULL;
 
 static void ali_mqtt_property_set_msg_arrive(void *pcontext, void *handle, iotx_mqtt_event_msg_pt msg);
 static void ali_mqtt_door_ctrl_msg_arrive(void *pcontext, void *handle, iotx_mqtt_event_msg_pt msg);
@@ -192,11 +191,10 @@ static void ali_mqtt_event_handle(void *pcontext, void *pclient, iotx_mqtt_event
             LOG_D("undefined event occur.");
             break;
         case IOTX_MQTT_EVENT_DISCONNECT:
-			mqtt_is_running = 0;
+			is_mqtt_disconnect = 1;
             LOG_D("MQTT disconnect.");
             break;
         case IOTX_MQTT_EVENT_RECONNECT:
-			mqtt_is_running = 1;
             LOG_D("MQTT reconnect.");
             break;
         case IOTX_MQTT_EVENT_SUBCRIBE_SUCCESS:
@@ -568,21 +566,12 @@ static void ali_mqtt_device_info_update_msg_arrive (void *pcontext, void *handle
 		LOG_I("feedback payload: %.*s.", topic_info->payload_len, topic_info->payload);
 		LOG_I("-------------------");
 #endif	
-		/* 该信号量表明已经连接到MQTT并且成功上传的设备标签 */
-	if (RT_NULL != mqtt_period_sem)
-		rt_sem_release(mqtt_period_sem);
-
 }
 
-void mqtt_period_thread(void *arg)
+void mqtt_period_task(void)
 {
 	int i;
 	int pos;
-
-	RT_ASSERT(arg != RT_NULL);
-	
-	if (mqtt_is_running == 0)
-		return;
 	
 	rt_uint8_t *door_status, *dev_error;
 	rt_uint16_t *door_alarm;
@@ -645,10 +634,9 @@ void mqtt_period_thread(void *arg)
 					    topic_msg.payload     = (void *)msg_pub;
 					    topic_msg.payload_len = rt_strlen(msg_pub); 
 
-						char topic_name[128];
-						rt_memset(topic_name, 0, sizeof(topic_name));
-						if (ef_get_env_blob(ALI_EVENT_DEVICE_ERROR_PUB, topic_name, sizeof(topic_name), RT_NULL) > 0)
-							IOT_MQTT_Publish(mqtt_client_hd, topic_name, &topic_msg); 
+						char *topic = mqtt_topic_find(ALI_EVENT_DEVICE_ERROR_PUB);
+						if (topic != RT_NULL)
+							IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);  
 
 						rt_free(msg_pub);
 					}
@@ -708,10 +696,9 @@ void mqtt_period_thread(void *arg)
 					    topic_msg.payload     = (void *)msg_pub;
 					    topic_msg.payload_len = rt_strlen(msg_pub); 
 
-						char topic_name[128];
-						rt_memset(topic_name, 0, sizeof(topic_name));
-						if (ef_get_env_blob(ALI_EVENT_DEVICE_ALARM_PUB, topic_name, sizeof(topic_name), RT_NULL) > 0)
-							IOT_MQTT_Publish(mqtt_client_hd, topic_name, &topic_msg); 
+						char *topic = mqtt_topic_find(ALI_EVENT_DEVICE_ALARM_PUB);
+						if (topic != RT_NULL)
+							IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);
 
 						rt_free(msg_pub);
 					}
@@ -767,10 +754,9 @@ void mqtt_period_thread(void *arg)
 					    topic_msg.payload     = (void *)msg_pub;
 					    topic_msg.payload_len = rt_strlen(msg_pub); 
 
-						char topic_name[128];
-						rt_memset(topic_name, 0, sizeof(topic_name));
-						if (ef_get_env_blob(ALI_EVENT_DEVICE_ALARM_PUB, topic_name, sizeof(topic_name), RT_NULL) > 0)
-							IOT_MQTT_Publish(mqtt_client_hd, topic_name, &topic_msg); 
+						char *topic = mqtt_topic_find(ALI_EVENT_DEVICE_ALARM_PUB);
+						if (topic != RT_NULL)
+							IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);
 
 						rt_free(msg_pub);
 					}
@@ -827,10 +813,9 @@ void mqtt_period_thread(void *arg)
 					    topic_msg.payload     = (void *)msg_pub;
 					    topic_msg.payload_len = rt_strlen(msg_pub); 
 
-						char topic_name[128];
-						rt_memset(topic_name, 0, sizeof(topic_name));
-						if (ef_get_env_blob(ALI_EVENT_DEVICE_ALARM_PUB, topic_name, sizeof(topic_name), RT_NULL) > 0)
-							IOT_MQTT_Publish(mqtt_client_hd, topic_name, &topic_msg); 
+						char *topic = mqtt_topic_find(ALI_EVENT_DEVICE_ALARM_PUB);
+						if (topic != RT_NULL)
+							IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);
 
 						rt_free(msg_pub);
 					}
@@ -840,91 +825,80 @@ void mqtt_period_thread(void *arg)
 		}
 	}
 
+	/* 周期上报设备参数 */
 	{
-		rt_uint8_t timer_cnt = *(rt_uint8_t *)(arg);
-		timer_cnt = (timer_cnt + 1) % 2;
-		*(rt_uint8_t *)(arg) = timer_cnt;
-		if (timer_cnt == 0)
+		char status_buff[128];
+		rt_memset(status_buff, 0, sizeof(status_buff));
+		for (pos = 0, i = 0; (i < (device_chn_num * device_num)) && (pos < sizeof(status_buff)); i++)
 		{
-			char status_buff[128];
-			rt_memset(status_buff, 0, sizeof(status_buff));
-			for (pos = 0, i = 0; (i < (device_chn_num * device_num)) && (pos < sizeof(status_buff)); i++)
+			if (i == ((device_chn_num * device_num) - 1))
+				pos += rt_snprintf(&status_buff[pos], sizeof(status_buff) - pos - 1, "%d", door_status[i]);
+			else
+				pos += rt_snprintf(&status_buff[pos], sizeof(status_buff) - pos - 1, "%d,", door_status[i]);
+		}
+
+		cJSON *root = cJSON_CreateObject();
+		if (root)
+		{
+			cJSON *js_params  = cJSON_CreateObject();
+			cJSON *js_quality = cJSON_CreateObject();
+			cJSON *js_status  = cJSON_CreateObject();
+			cJSON *js_device  = cJSON_CreateObject();
+			if (js_params && js_quality && js_status && js_device)
 			{
-				if (i == ((device_chn_num * device_num) - 1))
-					pos += rt_snprintf(&status_buff[pos], sizeof(status_buff) - pos - 1, "%d", door_status[i]);
+				//extern rt_uint8_t sim800c_rssi;
+				rt_uint8_t sim800c_rssi = 20;
+				
+				char str_id[16];
+				rt_memset(str_id, 0, sizeof(str_id));
+				rt_snprintf(str_id, sizeof(str_id), "%d", mqtt_packet_id++);
+				cJSON_AddStringToObject(root, "id", str_id);
+				
+				cJSON_AddStringToObject(root, "version", "1.0");
+				cJSON_AddItemToObject(root, "params", js_params);
+				cJSON_AddItemToObject(js_params, "signal_quality", js_quality);
+				cJSON_AddNumberToObject(js_quality, "value", sim800c_rssi);
+				cJSON_AddNumberToObject(js_quality, "time", now);
+				cJSON_AddItemToObject(js_params, "door_status", js_status);
+				cJSON_AddStringToObject(js_status, "value", status_buff);
+				cJSON_AddNumberToObject(js_status, "time", now);
+
+				/* 获取当前使用的网卡名字 */
+				cJSON_AddItemToObject(js_params, "net_device", js_device);
+				struct netdev *default_netdev = netdev_get_first_by_flags(NETDEV_FLAG_LINK_UP);
+				if (default_netdev)
+					cJSON_AddStringToObject(js_device, "value", default_netdev->name);
 				else
-					pos += rt_snprintf(&status_buff[pos], sizeof(status_buff) - pos - 1, "%d,", door_status[i]);
-			}
-
-			cJSON *root = cJSON_CreateObject();
-			if (root)
-			{
-				cJSON *js_params  = cJSON_CreateObject();
-				cJSON *js_quality = cJSON_CreateObject();
-				cJSON *js_status  = cJSON_CreateObject();
-				cJSON *js_device  = cJSON_CreateObject();
-				if (js_params && js_quality && js_status && js_device)
+					cJSON_AddStringToObject(js_device, "value", "unknown");					
+				cJSON_AddNumberToObject(js_device, "time", now);
+				
+				cJSON_AddStringToObject(root, "method", "thing.event.property.post");
+				char *msg_pub = cJSON_PrintUnformatted(root);
+				if (msg_pub)
 				{
-					//extern rt_uint8_t sim800c_rssi;
-					rt_uint8_t sim800c_rssi = 20;
-					
-					char str_id[16];
-					rt_memset(str_id, 0, sizeof(str_id));
-					rt_snprintf(str_id, sizeof(str_id), "%d", mqtt_packet_id++);
-					cJSON_AddStringToObject(root, "id", str_id);
-					
-					cJSON_AddStringToObject(root, "version", "1.0");
-					cJSON_AddItemToObject(root, "params", js_params);
-					cJSON_AddItemToObject(js_params, "signal_quality", js_quality);
-					cJSON_AddNumberToObject(js_quality, "value", sim800c_rssi);
-					cJSON_AddNumberToObject(js_quality, "time", now);
-					cJSON_AddItemToObject(js_params, "door_status", js_status);
-					cJSON_AddStringToObject(js_status, "value", status_buff);
-					cJSON_AddNumberToObject(js_status, "time", now);
+					iotx_mqtt_topic_info_t topic_msg;
+					rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
+					topic_msg.qos	 = IOTX_MQTT_QOS1;
+					topic_msg.retain = 0;
+					topic_msg.dup	 = 0;
+					topic_msg.payload	  = (void *)msg_pub;
+					topic_msg.payload_len = rt_strlen(msg_pub); 
 
-					cJSON_AddItemToObject(js_params, "net_device", js_device);
-					struct netdev *default_netdev = netdev_get_first_by_flags(NETDEV_FLAG_LINK_UP);
-					if (default_netdev)
-						cJSON_AddStringToObject(js_device, "value", default_netdev->name);
-					else
-						cJSON_AddStringToObject(js_device, "value", "unknown");					
-					cJSON_AddNumberToObject(js_device, "time", now);
-					
-					cJSON_AddStringToObject(root, "method", "thing.event.property.post");
-					char *msg_pub = cJSON_PrintUnformatted(root);
-					if (msg_pub)
-					{
-						iotx_mqtt_topic_info_t topic_msg;
-						rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
-						topic_msg.qos	 = IOTX_MQTT_QOS1;
-						topic_msg.retain = 0;
-						topic_msg.dup	 = 0;
-						topic_msg.payload	  = (void *)msg_pub;
-						topic_msg.payload_len = rt_strlen(msg_pub); 
-			
-						char topic_name[128];
-						rt_memset(topic_name, 0, sizeof(topic_name));
-						if (ef_get_env_blob(ALI_PROPERTY_POST_PUB, topic_name, sizeof(topic_name), RT_NULL) > 0)
-							IOT_MQTT_Publish(mqtt_client_hd, topic_name, &topic_msg); 
+					char *topic = mqtt_topic_find(ALI_PROPERTY_POST_PUB);
+					if (topic != RT_NULL)
+						IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);
 
-						rt_free(msg_pub);
-					}
+					rt_free(msg_pub);
 				}
-				cJSON_Delete(root);
 			}
+			cJSON_Delete(root);
 		}
 	}
 }
 
 
-static void mqtt_thread_event(void *arg)
+static void mqtt_devtag_task(void)
 {
-	/* 等待MQTT上线 */
-	while (mqtt_is_running == 0)
-	{
-		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
-	}
-
 	char dev_info[64];
 	rt_memset(dev_info, 0x0, sizeof(dev_info));
 	if (ef_get_env_blob(ALI_DEVICE_INFO_NAME, dev_info, sizeof(dev_info), RT_NULL) <= 0)
@@ -934,57 +908,59 @@ static void mqtt_thread_event(void *arg)
 	}
 
 	char msg_pub[128];
-	iotx_mqtt_topic_info_t topic_msg;
+	rt_memset(msg_pub, 0x0, sizeof(msg_pub));
+	rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"123\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", ALI_DEVICE_INFO_NAME, dev_info);
 	
+	iotx_mqtt_topic_info_t topic_msg;
+	rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
+	topic_msg.qos    = IOTX_MQTT_QOS1;
+    topic_msg.retain = 0;
+    topic_msg.dup    = 0;
+    topic_msg.payload     = (void *)msg_pub;
+    topic_msg.payload_len = rt_strlen(msg_pub);    
+
+	char *topic = mqtt_topic_find(ALI_DEVICEINFO_UPDATE_PUB);
+	if (topic != RT_NULL)
+		IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);  
+}
+
+static void mqtt_connect_check_thread(void *arg)
+{
+	struct netdev *netdev_link;
+
 	while (1)
-	{		
-		if (mqtt_period_sem == RT_NULL)
+	{
+		if ((is_mqtt_disconnect) && (mqtt_client_hd != RT_NULL))
 		{
-			mqtt_period_sem = rt_sem_create("perd_sem", 0, RT_IPC_FLAG_PRIO);
-			if (mqtt_period_sem == RT_NULL)
+			if (IOT_MQTT_CheckStateNormal(mqtt_client_hd) <= 0)
 			{
-				rt_memset(msg_pub, 0x0, sizeof(msg_pub));
-				rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"123\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", "Device warn", "Sem create failed");
-				goto __do_publish_device_info;
+				if (is_mqtt_disconnect >= 60)
+				{
+					netdev_link = netdev_get_first_by_flags(NETDEV_FLAG_LINK_UP);
+					if (!rt_strcmp(netdev_link->name, "sim0"))
+					{
+						netdev_link->ops->set_down(netdev_link);
+						rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
+						netdev_link->ops->set_up(netdev_link);
+					}
+					else
+					{
+						netdev_low_level_set_status(netdev_link, RT_FALSE);
+						rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
+						netdev_low_level_set_status(netdev_link, RT_TRUE);
+					}
+
+					/* next period to check */
+					is_mqtt_disconnect = 1;
+				}
+				else
+					is_mqtt_disconnect++;
 			}
-		}
-		rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"123\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", ALI_DEVICE_INFO_NAME, dev_info);
-
-__do_publish_device_info:
-	    rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
-	    topic_msg.qos    = IOTX_MQTT_QOS1;
-	    topic_msg.retain = 0;
-	    topic_msg.dup    = 0;
-	    topic_msg.payload     = (void *)msg_pub;
-	    topic_msg.payload_len = rt_strlen(msg_pub);       
-
-		char *topic= mqtt_topic_find(ALI_DEVICEINFO_UPDATE_PUB);
-		if (topic != RT_NULL)
-			IOT_MQTT_Publish(mqtt_client_hd, topic, &topic_msg);  
-		else
-		{
-			rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
-			continue;
+			else
+				is_mqtt_disconnect = 0;
 		}
 
-		if (mqtt_period_sem == RT_NULL)
-		{	
-			rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
-			continue;
-		}
-
-		if (rt_sem_take(mqtt_period_sem, rt_tick_from_millisecond(10 * RT_TICK_PER_SECOND)) != RT_EOK)
-		{
-			goto __do_publish_device_info;
-		}
-
-		mqtt_timer_cnt = 0;
-			
-		rt_timer_t tim = rt_timer_create("ali_timer", mqtt_period_thread, &mqtt_timer_cnt, rt_tick_from_millisecond(10 * RT_TICK_PER_SECOND), RT_TIMER_FLAG_SOFT_TIMER | RT_TIMER_FLAG_PERIODIC);
-		if (tim != RT_NULL);
-			rt_timer_start(tim);
-			
-		break;
+		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 	}
 }
 
@@ -993,8 +969,9 @@ extern int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1]
 extern int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1]);
 extern int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1]);
 
-static void mqtt_thread_main(void *arg)
+static void mqtt_thread_main_thread(void *arg)
 {
+#if 0
 	/* 确定其中至少有网卡上线才执行线程 */
 	struct netdev *netdev_link = RT_NULL;
 	while (netdev_link == RT_NULL)
@@ -1005,6 +982,7 @@ static void mqtt_thread_main(void *arg)
 		
 		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 	}
+#endif
 	
 	/* 如果读存储的设备密码错误或者为空,那么就进行动态注册 */
 	iotx_dev_meta_info_t meta;
@@ -1046,8 +1024,10 @@ static void mqtt_thread_main(void *arg)
 		}
 	}
 
-	while (1)
+	while (is_mqtt_exit == 0)
 	{
+		int i;
+		int mqtt_period_cnt = 0;
 		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);
 		
 		for (int32_t res = -1; res < 0;) 
@@ -1067,6 +1047,8 @@ static void mqtt_thread_main(void *arg)
 	    rt_memset(&mqtt_params, 0x0, sizeof(mqtt_params));
 		
 	    /* feedback parameter of platform when use IOT_SetupConnInfo() connect */
+		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
+		
 	    mqtt_params.port      = sign_mqtt.port;
 	    mqtt_params.host      = sign_mqtt.hostname;
 	    mqtt_params.client_id = sign_mqtt.clientid;
@@ -1091,11 +1073,12 @@ static void mqtt_thread_main(void *arg)
 	    if (RT_NULL == mqtt_client_hd) 
 	    {
 	        LOG_D("construct MQTT failed!");
-	        goto __do_main_exit;
+	        rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
+			continue;
 	    }
         
         /* sbuscribe all topic */
-        for (int i = 0; i < sub_items; i++)
+        for (i = 0; i < sub_items; i++)
         {	
         	if (mqtt_sub_item[i].topic_handle_func == RT_NULL)
         		continue;
@@ -1103,46 +1086,55 @@ static void mqtt_thread_main(void *arg)
             if (IOT_MQTT_Subscribe(mqtt_client_hd, &topic[i * 128], mqtt_sub_item[i].qos, mqtt_sub_item[i].topic_handle_func, mqtt_sub_item[i].pcontext) < 0)
             {
                 LOG_D("IOT_MQTT_Subscribe() failed, topic = %s", &topic[i * 128]);
-                IOT_MQTT_Destroy(&mqtt_client_hd);
-                goto __do_main_exit;
+                goto __do_main_release;
             }         
         }
 
-		/* handle the MQTT packet received from TCP or SSL connection */
-        IOT_MQTT_Yield(mqtt_client_hd, 200);
-		mqtt_is_running = 1;
+		IOT_MQTT_Yield(mqtt_client_hd, 200);
+		is_mqtt_disconnect = 0;
+
+		/* 每次连接成功后发送一次设备标签信息 */
+		mqtt_devtag_task();
 	
-        while (1)
+        while (is_mqtt_exit == 0)
         {
             /* handle the MQTT packet received from TCP or SSL connection */
             IOT_MQTT_Yield(mqtt_client_hd, 200);
+
+			/* 每10s执行一次周期任务 */
+			if ((mqtt_period_cnt % 50) == 0)
+				mqtt_period_task();
 
 			/* OTA周期执行 */
 			extern rt_err_t mqtt_ota(void *mqtt_ota_hd, char *product_key, char *device_name);
 			mqtt_ota(mqtt_client_hd, meta.product_key, meta.device_name);
 			
-            rt_thread_delay(rt_tick_from_millisecond(200));          
+            mqtt_period_cnt++;        
         }
 		
         IOT_MQTT_Yield(mqtt_client_hd, 200);
+		is_mqtt_disconnect = 1;
 
 		/* OTA模块释放 */
 		extern void mqtt_ota_deinit(void);
 		mqtt_ota_deinit();
 
+__do_main_release:
         /* ubsbuscribe all topic */
-        for (int i = 0; i < sub_items; i++)			
+        for (i = 0; i < sub_items; i++)			
             IOT_MQTT_Unsubscribe(mqtt_client_hd, &topic[i * 128]);
 
 		if (RT_NULL != mqtt_client_hd)
+		{
         	IOT_MQTT_Destroy(&mqtt_client_hd);
-		mqtt_client_hd = RT_NULL;
+			mqtt_client_hd = RT_NULL;
+		}
+	}
 
-		mqtt_is_running = 0;
-
-__do_main_exit:
-		LOG_I("MQTT Execute Reconnect Procedure.");
-		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
+	if (topic_buff != RT_NULL)
+	{
+		rt_free(topic_buff);
+		topic_buff = RT_NULL;
 	}
 }
 
@@ -1150,13 +1142,13 @@ static int ali_mqtt_init(void)
 {
 	rt_thread_t tid;
 	
-    tid = rt_thread_create("mqtt.main", mqtt_thread_main, RT_NULL, 6 * 1024, RT_THREAD_PRIORITY_MAX / 2 - 1, 10);
+    tid = rt_thread_create("mqtt.main", mqtt_thread_main_thread, RT_NULL, 6 * 1024, RT_THREAD_PRIORITY_MAX / 2 - 1, 10);
     if (tid != RT_NULL)
         rt_thread_startup(tid);
 
-	tid = rt_thread_create("mqtt.event", mqtt_thread_event, RT_NULL, 2 * 1024, RT_THREAD_PRIORITY_MAX / 2, 10);
-	if (tid != RT_NULL)
-		rt_thread_startup(tid);
+	tid = rt_thread_create("mqtt.chk", mqtt_connect_check_thread, RT_NULL, 2 * 1024, RT_THREAD_PRIORITY_MAX / 2, 10);
+    if (tid != RT_NULL)
+        rt_thread_startup(tid);
 
     return 0;
 }
