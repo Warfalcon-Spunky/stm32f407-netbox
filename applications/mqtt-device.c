@@ -119,7 +119,7 @@ static char *mqtt_topic_find(const char *topic_fliter)
 	return topic;
 }
 
-static rt_err_t mqtt_check_load_topic(char *product_key, char *device_name, char *topic)
+static char * mqtt_check_load_topic(char *product_key, char *device_name, char *topic)
 {
 	RT_ASSERT(product_key != RT_NULL);
 	RT_ASSERT(device_name != RT_NULL);
@@ -131,7 +131,7 @@ static rt_err_t mqtt_check_load_topic(char *product_key, char *device_name, char
 	if (topic == RT_NULL)
 	{
 		LOG_D("not enough memory for topic name!");
-        return -RT_ENOMEM;
+        return RT_NULL;
 	}
 	rt_memset(topic, 0x0, MQTT_TOPIC_MAX_SIZE * sub_items);
 
@@ -172,7 +172,7 @@ static rt_err_t mqtt_check_load_topic(char *product_key, char *device_name, char
 		}	
 	}
 	
-	return RT_EOK;
+	return topic;
 }
 
 static void ali_mqtt_event_handle(void *pcontext, void *pclient, iotx_mqtt_event_msg_pt msg)
@@ -987,26 +987,26 @@ static void mqtt_thread_main_thread(void *arg)
 	/* 如果读存储的设备密码错误或者为空,那么就进行动态注册 */
 	iotx_dev_meta_info_t meta;
 	memset(&meta, 0x0, sizeof(iotx_dev_meta_info_t));
-	
-	iotx_sign_mqtt_t sign_mqtt;
-	iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
-
+    
+    HAL_GetProductKey(meta.product_key);
+	HAL_GetProductSecret(meta.product_secret);
+	HAL_GetDeviceName(meta.device_name);
+    
 	if (topic_buff != RT_NULL)
 	{
 		rt_free(topic_buff);
 		topic_buff = RT_NULL;
 	}
 
-	char *topic = RT_NULL;
-	while (topic == RT_NULL)
+	while (topic_buff == RT_NULL)
 	{
-		mqtt_check_load_topic(meta.product_key, meta.device_name, topic);
+		char *topic = mqtt_check_load_topic(meta.product_key, meta.device_name, topic);
+        if (topic)
+            topic_buff = topic;
 	}
-	topic_buff = topic;
-
-	HAL_GetProductKey(meta.product_key);
-	HAL_GetProductSecret(meta.product_secret);
-	HAL_GetDeviceName(meta.device_name);
+    
+    iotx_sign_mqtt_t sign_mqtt;
+	iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
 	
 	if (HAL_GetDeviceSecret(meta.product_secret) <= 0)
 	{
@@ -1083,9 +1083,9 @@ static void mqtt_thread_main_thread(void *arg)
         	if (mqtt_sub_item[i].topic_handle_func == RT_NULL)
         		continue;
 					
-            if (IOT_MQTT_Subscribe(mqtt_client_hd, &topic[i * 128], mqtt_sub_item[i].qos, mqtt_sub_item[i].topic_handle_func, mqtt_sub_item[i].pcontext) < 0)
+            if (IOT_MQTT_Subscribe(mqtt_client_hd, &topic_buff[i * 128], mqtt_sub_item[i].qos, mqtt_sub_item[i].topic_handle_func, mqtt_sub_item[i].pcontext) < 0)
             {
-                LOG_D("IOT_MQTT_Subscribe() failed, topic = %s", &topic[i * 128]);
+                LOG_D("IOT_MQTT_Subscribe() failed, topic = %s", &topic_buff[i * 128]);
                 goto __do_main_release;
             }         
         }
@@ -1122,7 +1122,7 @@ static void mqtt_thread_main_thread(void *arg)
 __do_main_release:
         /* ubsbuscribe all topic */
         for (i = 0; i < sub_items; i++)			
-            IOT_MQTT_Unsubscribe(mqtt_client_hd, &topic[i * 128]);
+            IOT_MQTT_Unsubscribe(mqtt_client_hd, &topic_buff[i * 128]);
 
 		if (RT_NULL != mqtt_client_hd)
 		{
