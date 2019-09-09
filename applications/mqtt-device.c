@@ -968,6 +968,7 @@ extern int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1]);
 extern int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1]);
 extern int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1]);
 extern int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1]);
+extern int HAL_SetDeviceSecret(char* device_secret);
 
 static void mqtt_thread_main_thread(void *arg)
 {
@@ -1008,7 +1009,7 @@ static void mqtt_thread_main_thread(void *arg)
     iotx_sign_mqtt_t sign_mqtt;
 	iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
 	
-	if (HAL_GetDeviceSecret(meta.product_secret) <= 0)
+	if (HAL_GetDeviceSecret(meta.device_secret) <= 0)
 	{
 		while (1)
 		{
@@ -1018,6 +1019,7 @@ static void mqtt_thread_main_thread(void *arg)
 			}
 			else
 			{
+                HAL_SetDeviceSecret(meta.device_secret);
 				LOG_D("Device Secret: %s.", meta.device_secret);
 				break;
 			}
@@ -1029,7 +1031,7 @@ static void mqtt_thread_main_thread(void *arg)
 		int i;
 		int mqtt_period_cnt = 0;
 		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);
-		
+#if 0		
 		for (int32_t res = -1; res < 0;) 
 		{
 			res = IOT_Sign_MQTT(region, &meta, &sign_mqtt);
@@ -1041,19 +1043,20 @@ static void mqtt_thread_main_thread(void *arg)
 	    LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
 	    LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
 	    LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);
-
+#endif
 		/* Initialize MQTT parameter */
 		iotx_mqtt_param_t mqtt_params;
 	    rt_memset(&mqtt_params, 0x0, sizeof(mqtt_params));
 		
 	    /* feedback parameter of platform when use IOT_SetupConnInfo() connect */
 		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
-		
+#if 0		
 	    mqtt_params.port      = sign_mqtt.port;
 	    mqtt_params.host      = sign_mqtt.hostname;
 	    mqtt_params.client_id = sign_mqtt.clientid;
 	    mqtt_params.username  = sign_mqtt.username;
 	    mqtt_params.password  = sign_mqtt.password;
+#endif
 		/* not use TLS or SSL, only TCP channel */
 	    mqtt_params.pub_key = RT_NULL;
 	    /* timeout of request. uint: ms */

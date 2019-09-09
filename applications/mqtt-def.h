@@ -38,7 +38,7 @@
 #define ALI_ALARM_TIMEOUT						0x0001
 #define ALI_ALARM_ILLEGAL						0x0002
 
-#define MQTT_OTA_DOWNLOAD_PARTITION_NAME		"download"
+#define MQTT_OTA_DOWNLOAD_PARTITION_NAME		"dl-area"
 #define MQTT_OTA_VERSION_MAXLEN					33
 #define MQTT_OTA_FIRMWARE_VERSION				"Firmware-Version"
 

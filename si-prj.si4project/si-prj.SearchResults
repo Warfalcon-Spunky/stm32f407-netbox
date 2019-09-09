@@ -1,28 +1,4 @@
----- INFRA_SHA256 Matches (24 in 11 files) ----
-awss_crypt.c (packages\ali-iotkit-latest\iotkit-embedded\src\wifi_provision\frameworks\utils) line 6 : #include "infra_sha256.h"
-awss_enrollee.h (packages\ali-iotkit-latest\iotkit-embedded\src\wifi_provision\zero_config) line 10 : #include "infra_sha256.h"
-dev_sign_mqtt.c (packages\ali-iotkit-latest\iotkit-embedded\src\dev_sign) line 5 : #include "infra_sha256.h"
-dynreg.c (packages\ali-iotkit-latest\iotkit-embedded\src\dynamic_register) line 10 : #include "infra_sha256.h"
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 219 :  * Example: In case you uncomment INFRA_SHA256_PROCESS_ALT, mbed TLS will
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 691 :  *           INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 770 :  * Requires: INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 775 :  * This option is only useful if both INFRA_SHA256_C and
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 875 :  * \def INFRA_SHA256_SMALLER
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 1067 :  * Requires: INFRA_SHA1_C or INFRA_SHA256_C or INFRA_SHA512_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 1723 :  * Requires: INFRA_SHA512_C or INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 2090 :  * \def INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 2104 : #define INFRA_SHA256_C
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 6 : #ifdef INFRA_SHA256
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 8 : #define INFRA_SHA256_SMALLER
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 12 : #include "infra_sha256.h"
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #if defined(INFRA_SHA256_SMALLER)
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #else /* INFRA_SHA256_SMALLER */
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #endif /* INFRA_SHA256_SMALLER */
-iotx_coap_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\coap) line 21 : #include "infra_sha256.h"
-iotx_ota_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\ota) line 15 : #include "infra_sha256.h"
-mqtt_api.c (packages\ali-iotkit-latest\iotkit-embedded\src\mqtt) line 6 : #include "infra_sha256.h"
-mqtt_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\mqtt\impl) line 19 : #include "infra_sha256.h"
-rtconfig.h line 298 : #define INFRA_SHA256
----- INFRA_SHA256 Search Errors Encountered (1) ----
+---- IOTX_WITHOUT_TLS Matches (0 in 0 files) ----
+---- IOTX_WITHOUT_TLS Search Errors Encountered (1) ----
 The following 1 files could not be processed:
 D:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.

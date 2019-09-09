@@ -40,6 +40,8 @@
 static void *ota_hd = RT_NULL;
 static char ota_recv_buff[MQTT_OTA_RECV_BUFF_LEN];
 
+static char firmware_verison[MQTT_OTA_VERSION_MAXLEN];
+
 void mqtt_start_period_timer(void)
 {
 	rt_timer_t period_timer;
@@ -78,10 +80,11 @@ rt_err_t mqtt_ota_init(void *mqtt_ota_hd, char *product_key, char *device_name)
         LOG_D("initialize OTA failed");
 		return RT_ERROR;
     }
-    
-	char firmware_verison[MQTT_OTA_VERSION_MAXLEN];
+
+	extern int HAL_GetFirmwareVersion(char *version);
+	
 	rt_memset(firmware_verison, 0, sizeof(firmware_verison));
-	if (ef_get_env_blob(MQTT_OTA_FIRMWARE_VERSION, firmware_verison, sizeof(firmware_verison) - 1, RT_NULL) <= 0)
+	if (HAL_GetFirmwareVersion(firmware_verison) <= 0)
 	{
 		LOG_D("get device firmware version failed");
         if (ota_hd)
@@ -130,17 +133,12 @@ rt_err_t mqtt_ota(void *mqtt_ota_hd, char *product_key, char *device_name)
 		char fm_ver[MQTT_OTA_VERSION_MAXLEN], md5sum[33];		
         IOT_OTA_Ioctl(ota_hd, IOT_OTAG_VERSION, fm_ver, MQTT_OTA_VERSION_MAXLEN);
 		IOT_OTA_Ioctl(ota_hd, IOT_OTAG_MD5SUM, md5sum, 33);
-		
-		char firmware_verison[MQTT_OTA_VERSION_MAXLEN];
-		rt_memset(firmware_verison, 0, sizeof(firmware_verison));
-		if (ef_get_env_blob(MQTT_OTA_FIRMWARE_VERSION, firmware_verison, sizeof(firmware_verison) - 1, RT_NULL) > 0)
+
+		if (!rt_strcasecmp(firmware_verison, fm_ver))
 		{
-			if (!rt_strcasecmp(firmware_verison, fm_ver))
-			{
-				IOT_OTA_ReportVersion(ota_hd, fm_ver);
-				result = RT_EOK;
-				goto __mqtt_ota_exit;
-			}
+			IOT_OTA_ReportVersion(ota_hd, fm_ver);
+			result = RT_EOK;
+			goto __mqtt_ota_exit;
 		}
 		
 		const struct fal_partition *dl_partition;

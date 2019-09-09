@@ -55,9 +55,9 @@ extern struct fal_flash_dev nor_flash0;
 #define FAL_PART_TABLE                                                               \
 {                                                                                    \
     {FAL_PART_MAGIC_WROD,        "app",    "onchip_flash",                           			   0,      1024 * 1024, 0}, \
-    {FAL_PART_MAGIC_WROD,       "para",    FAL_USING_NOR_FLASH_DEV_NAME,                           0,      1024 * 1024, 0}, \
-    {FAL_PART_MAGIC_WROD,      "image",    FAL_USING_NOR_FLASH_DEV_NAME,                 1024 * 1024,      1024 * 1024, 0}, \
-    {FAL_PART_MAGIC_WROD,         "dl",    FAL_USING_NOR_FLASH_DEV_NAME,        (1024 + 1024) * 1024,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,    "dl-area",    FAL_USING_NOR_FLASH_DEV_NAME,                           0,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,    "df-area",    FAL_USING_NOR_FLASH_DEV_NAME,                 1024 * 1024,      1024 * 1024, 0}, \
+    {FAL_PART_MAGIC_WROD,    "kv-area",    FAL_USING_NOR_FLASH_DEV_NAME,        (1024 + 1024) * 1024,      1024 * 1024, 0}, \
     {FAL_PART_MAGIC_WROD,      "elmfs",    FAL_USING_NOR_FLASH_DEV_NAME, (1024 + 1024 + 1024) * 1024, 13 * 1024 * 1024, 0}, \
 }
 #endif /* FAL_PART_HAS_TABLE_CFG */
