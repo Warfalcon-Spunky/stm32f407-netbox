@@ -32,20 +32,21 @@
 	#define ALI_IOTKIT_PRODUCT_SECRET		""
 #endif
 
-static char __fm_version[IOTX_FIRMWARE_VER_LEN];
+#if defined(PKG_USING_ALI_IOTKIT_DEVICE_SECRET)
+	#define ALI_IOTKIT_DEVICE_SECRET		PKG_USING_ALI_IOTKIT_DEVICE_SECRET
+#else
+	#define ALI_IOTKIT_DEVICE_SECRET		""
+#endif
 
 int HAL_GetFirmwareVersion(char *version)
 {
-    RT_ASSERT(version);
+    if (version == RT_NULL)
+    	return -1;
 
-	rt_memset(__fm_version, 0x0, IOTX_FIRMWARE_VER_LEN);
-	rt_snprintf(__fm_version, sizeof(__fm_version) - 1, "os-%d:app-%s@%s", RTTHREAD_VERSION, APP_VERSION, __DATE__);
-	
-    int ver_len = strlen(__fm_version);
-    memset(version, 0x0, IOTX_FIRMWARE_VER_LEN);
-    rt_strncpy(version, __fm_version, IOTX_FIRMWARE_VER_LEN);
-    version[ver_len] = '\0';
-    return strlen(version);
+	rt_memset(version, 0x0, IOTX_FIRMWARE_VER_LEN);
+	rt_snprintf(version, IOTX_FIRMWARE_VER_LEN, "os-%d:app-%s", RTTHREAD_VERSION, APP_VERSION);
+
+    return rt_strlen(version);
 }
 
 int HAL_SetProductKey(char* product_key)
@@ -132,7 +133,19 @@ int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1])
 
 int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
 {
+#if 0
+	int len = rt_strlen(ALI_IOTKIT_DEVICE_SECRET);
+	if (len > IOTX_DEVICE_SECRET_LEN)
+	{
+		len = IOTX_DEVICE_SECRET_LEN;
+	}
+	
     rt_memset(device_secret, 0x0, IOTX_DEVICE_SECRET_LEN + 1);
+	rt_strncpy(device_secret, ALI_IOTKIT_DEVICE_SECRET, len);
+    return len;
+#endif
+
+#if 1
     int len = ef_get_env_blob("DeviceSecret", device_secret, IOTX_DEVICE_SECRET_LEN, RT_NULL);
 
 	if (len < 0)
@@ -145,6 +158,7 @@ int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
 	}
 
 	return len;
+#endif
 }
 
 RT_WEAK int HAL_Kv_Set(const char *key, const void *val, int len, int sync)

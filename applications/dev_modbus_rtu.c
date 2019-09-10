@@ -517,7 +517,7 @@ static int dev_modbus_rtu_init(void)
 		device_chn_num = atoi(str_dev_chn_num);
 	
     rt_thread_t tid;
-	tid = rt_thread_create("modbus", dev_modbus_thread, RT_NULL, 4096, 11, 10);
+	tid = rt_thread_create("modbus", dev_modbus_thread, RT_NULL, 2048, 11, 10);
     if (tid != RT_NULL)
         rt_thread_startup(tid);
 	

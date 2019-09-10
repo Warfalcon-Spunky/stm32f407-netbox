@@ -36,7 +36,7 @@
 #include "mqtt-def.h"
 
 /* EasyFlash partition name on FAL partition table */
-#define FAL_EF_PART_NAME               "para"
+#define FAL_EF_PART_NAME               "kv-area"
 
 /* default ENV set for user */
 static const ef_env default_env_set[] = {

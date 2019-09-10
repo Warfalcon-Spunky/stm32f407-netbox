@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---- strftime Matches (6 in 5 files) ----
 cyg_type.h (rt-thread\components\dfs\filesystems\jffs2\cyg\infra) line 450 : 
 
@@ -38,5 +39,9 @@ file_write_http_header in makefsdata.c (rt-thread\components\net\lwip-2.1.0\src\
     fprintf(data_file, NEWLINE "/* \"%s\"\r\n\" (%"SZT_F"+ bytes) */" NEWLINE, cur_string, cur_len + 2);
     written += file_put_ascii(data_file, cur_string, cur_len, &i);
 ---- strftime Search Errors Encountered (1) ----
+=======
+---- IOTX_WITHOUT_TLS Matches (0 in 0 files) ----
+---- IOTX_WITHOUT_TLS Search Errors Encountered (1) ----
+>>>>>>> origin/dev
 The following 1 files could not be processed:
 E:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
