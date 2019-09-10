@@ -1,28 +1,42 @@
----- INFRA_SHA256 Matches (24 in 11 files) ----
-awss_crypt.c (packages\ali-iotkit-latest\iotkit-embedded\src\wifi_provision\frameworks\utils) line 6 : #include "infra_sha256.h"
-awss_enrollee.h (packages\ali-iotkit-latest\iotkit-embedded\src\wifi_provision\zero_config) line 10 : #include "infra_sha256.h"
-dev_sign_mqtt.c (packages\ali-iotkit-latest\iotkit-embedded\src\dev_sign) line 5 : #include "infra_sha256.h"
-dynreg.c (packages\ali-iotkit-latest\iotkit-embedded\src\dynamic_register) line 10 : #include "infra_sha256.h"
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 219 :  * Example: In case you uncomment INFRA_SHA256_PROCESS_ALT, mbed TLS will
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 691 :  *           INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 770 :  * Requires: INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 775 :  * This option is only useful if both INFRA_SHA256_C and
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 875 :  * \def INFRA_SHA256_SMALLER
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 1067 :  * Requires: INFRA_SHA1_C or INFRA_SHA256_C or INFRA_SHA512_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 1723 :  * Requires: INFRA_SHA512_C or INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 2090 :  * \def INFRA_SHA256_C
-infra_aes_config.h (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 2104 : #define INFRA_SHA256_C
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 6 : #ifdef INFRA_SHA256
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 8 : #define INFRA_SHA256_SMALLER
-infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 12 : #include "infra_sha256.h"
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #if defined(INFRA_SHA256_SMALLER)
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #else /* INFRA_SHA256_SMALLER */
-utils_sha256_process in infra_sha256.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #endif /* INFRA_SHA256_SMALLER */
-iotx_coap_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\coap) line 21 : #include "infra_sha256.h"
-iotx_ota_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\ota) line 15 : #include "infra_sha256.h"
-mqtt_api.c (packages\ali-iotkit-latest\iotkit-embedded\src\mqtt) line 6 : #include "infra_sha256.h"
-mqtt_internal.h (packages\ali-iotkit-latest\iotkit-embedded\src\mqtt\impl) line 19 : #include "infra_sha256.h"
-rtconfig.h line 298 : #define INFRA_SHA256
----- INFRA_SHA256 Search Errors Encountered (1) ----
+---- strftime Matches (6 in 5 files) ----
+cyg_type.h (rt-thread\components\dfs\filesystems\jffs2\cyg\infra) line 450 : 
+
+// Teach compiler how to check format of strftime-like functions
+# define CYGBLD_ATTRIB_STRFTIME_FORMAT(__format__, __args__) \
+        __attribute__((format (strftime, __format__, __args__)))
+
+// Tell the compiler not to throw away a variable or function. Only known
+// available on 3.3.2 or above. Old version's didn't throw them away,
+cyg_type.h (rt-thread\components\dfs\filesystems\jffs2\cyg\infra) line 491 : 
+
+# define CYGBLD_ATTRIB_STRFTIME_FORMAT(__format__, __args__)
+
+
+#endif
+pncrypt_setkey in eap.c (rt-thread\components\net\lwip-2.0.2\src\netif\ppp) : 
+	SHA1Update(&ctxt, pn_secret, strlen(pn_secret));
+	strftime(tbuf, sizeof (tbuf), "%Y%m%d", tp);
+	SHA1Update(&ctxt, tbuf, strlen(tbuf));
+	SHA1Final(dig, &ctxt);
+	/* FIXME: if we want to do SRP, we need to find a way to pass the PolarSSL des_context instead of using static memory */
+pncrypt_setkey in eap.c (rt-thread\components\net\lwip-2.1.0\src\netif\ppp) : 
+	SHA1Update(&ctxt, pn_secret, strlen(pn_secret));
+	strftime(tbuf, sizeof (tbuf), "%Y%m%d", tp);
+	SHA1Update(&ctxt, tbuf, strlen(tbuf));
+	SHA1Final(dig, &ctxt);
+	/* FIXME: if we want to do SRP, we need to find a way to pass the PolarSSL des_context instead of using static memory */
+file_write_http_header in makefsdata.c (rt-thread\components\net\lwip-2.0.2\src\apps\httpd\makefsdata) : 
+    }
+    strftime(&modbuf[15], sizeof(modbuf)-15, "%a, %d %b %Y %H:%M:%S GMT", t);
+    cur_len = strlen(cur_string);
+    fprintf(data_file, NEWLINE "/* \"%s\"\r\n\" (%d+ bytes) */" NEWLINE, cur_string, cur_len+2);
+    written += file_put_ascii(data_file, cur_string, cur_len, &i);
+file_write_http_header in makefsdata.c (rt-thread\components\net\lwip-2.1.0\src\apps\http\makefsdata) : 
+    }
+    strftime(&modbuf[15], sizeof(modbuf) - 15, "%a, %d %b %Y %H:%M:%S GMT", t);
+    cur_len = strlen(cur_string);
+    fprintf(data_file, NEWLINE "/* \"%s\"\r\n\" (%"SZT_F"+ bytes) */" NEWLINE, cur_string, cur_len + 2);
+    written += file_put_ascii(data_file, cur_string, cur_len, &i);
+---- strftime Search Errors Encountered (1) ----
 The following 1 files could not be processed:
-D:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
+E:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
