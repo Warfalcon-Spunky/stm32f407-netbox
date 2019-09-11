@@ -43,7 +43,10 @@
 
 static void        *g_mqtt_client = NULL;
 iotx_sign_mqtt_t    g_default_sign;
+
+#ifdef SUPPORT_TLS
 static char         iotx_ca_crt_itls[IOTX_PRODUCT_KEY_LEN + IOTX_PRODUCT_SECRET_LEN + 2] = {0};
+#endif
 
 /* Handle structure of subscribed topic */
 typedef struct  {

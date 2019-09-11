@@ -24,7 +24,7 @@
 #include <string.h>
 #include "infra_types.h"
 #include "infra_defs.h"
-#include "dynreg_api.h"
+//#include "dynreg_api.h"
 #include "dev_sign_api.h"
 #include "mqtt_api.h"
 #include "mqtt-def.h"
@@ -1008,7 +1008,8 @@ static void mqtt_thread_main_thread(void *arg)
     
     iotx_sign_mqtt_t sign_mqtt;
 	iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
-	
+
+#if 0
 	if (HAL_GetDeviceSecret(meta.device_secret) <= 0)
 	{
 		while (1)
@@ -1025,38 +1026,41 @@ static void mqtt_thread_main_thread(void *arg)
 			}
 		}
 	}
+#else
+	HAL_GetDeviceSecret(meta.device_secret);
+#endif
+
+	if (IOT_Sign_MQTT(region, &meta, &sign_mqtt) < 0)
+	{	
+		LOG_D("Device sign failed.");
+		return;
+	}
+
+	LOG_D("sign_mqtt.hostname: %s", sign_mqtt.hostname);
+    LOG_D("sign_mqtt.port    : %d", sign_mqtt.port);
+    LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
+    LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
+    LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);
 
 	while (is_mqtt_exit == 0)
 	{
 		int i;
 		int mqtt_period_cnt = 0;
 		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);
-#if 0		
-		for (int32_t res = -1; res < 0;) 
-		{
-			res = IOT_Sign_MQTT(region, &meta, &sign_mqtt);
-			LOG_D("Device Sign failed: 0x%x", res);
-	    }
-
-		LOG_D("sign_mqtt.hostname: %s", sign_mqtt.hostname);
-	    LOG_D("sign_mqtt.port    : %d", sign_mqtt.port);
-	    LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
-	    LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
-	    LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);
-#endif
+		
 		/* Initialize MQTT parameter */
 		iotx_mqtt_param_t mqtt_params;
 	    rt_memset(&mqtt_params, 0x0, sizeof(mqtt_params));
 		
 	    /* feedback parameter of platform when use IOT_SetupConnInfo() connect */
 		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
-#if 0		
+		
 	    mqtt_params.port      = sign_mqtt.port;
 	    mqtt_params.host      = sign_mqtt.hostname;
 	    mqtt_params.client_id = sign_mqtt.clientid;
 	    mqtt_params.username  = sign_mqtt.username;
 	    mqtt_params.password  = sign_mqtt.password;
-#endif
+		
 		/* not use TLS or SSL, only TCP channel */
 	    mqtt_params.pub_key = RT_NULL;
 	    /* timeout of request. uint: ms */
