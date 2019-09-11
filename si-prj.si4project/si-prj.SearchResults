@@ -1,47 +1,15 @@
-<<<<<<< HEAD
----- strftime Matches (6 in 5 files) ----
-cyg_type.h (rt-thread\components\dfs\filesystems\jffs2\cyg\infra) line 450 : 
-
-// Teach compiler how to check format of strftime-like functions
-# define CYGBLD_ATTRIB_STRFTIME_FORMAT(__format__, __args__) \
-        __attribute__((format (strftime, __format__, __args__)))
-
-// Tell the compiler not to throw away a variable or function. Only known
-// available on 3.3.2 or above. Old version's didn't throw them away,
-cyg_type.h (rt-thread\components\dfs\filesystems\jffs2\cyg\infra) line 491 : 
-
-# define CYGBLD_ATTRIB_STRFTIME_FORMAT(__format__, __args__)
-
-
-#endif
-pncrypt_setkey in eap.c (rt-thread\components\net\lwip-2.0.2\src\netif\ppp) : 
-	SHA1Update(&ctxt, pn_secret, strlen(pn_secret));
-	strftime(tbuf, sizeof (tbuf), "%Y%m%d", tp);
-	SHA1Update(&ctxt, tbuf, strlen(tbuf));
-	SHA1Final(dig, &ctxt);
-	/* FIXME: if we want to do SRP, we need to find a way to pass the PolarSSL des_context instead of using static memory */
-pncrypt_setkey in eap.c (rt-thread\components\net\lwip-2.1.0\src\netif\ppp) : 
-	SHA1Update(&ctxt, pn_secret, strlen(pn_secret));
-	strftime(tbuf, sizeof (tbuf), "%Y%m%d", tp);
-	SHA1Update(&ctxt, tbuf, strlen(tbuf));
-	SHA1Final(dig, &ctxt);
-	/* FIXME: if we want to do SRP, we need to find a way to pass the PolarSSL des_context instead of using static memory */
-file_write_http_header in makefsdata.c (rt-thread\components\net\lwip-2.0.2\src\apps\httpd\makefsdata) : 
-    }
-    strftime(&modbuf[15], sizeof(modbuf)-15, "%a, %d %b %Y %H:%M:%S GMT", t);
-    cur_len = strlen(cur_string);
-    fprintf(data_file, NEWLINE "/* \"%s\"\r\n\" (%d+ bytes) */" NEWLINE, cur_string, cur_len+2);
-    written += file_put_ascii(data_file, cur_string, cur_len, &i);
-file_write_http_header in makefsdata.c (rt-thread\components\net\lwip-2.1.0\src\apps\http\makefsdata) : 
-    }
-    strftime(&modbuf[15], sizeof(modbuf) - 15, "%a, %d %b %Y %H:%M:%S GMT", t);
-    cur_len = strlen(cur_string);
-    fprintf(data_file, NEWLINE "/* \"%s\"\r\n\" (%"SZT_F"+ bytes) */" NEWLINE, cur_string, cur_len + 2);
-    written += file_put_ascii(data_file, cur_string, cur_len, &i);
----- strftime Search Errors Encountered (1) ----
-=======
----- IOTX_WITHOUT_TLS Matches (0 in 0 files) ----
----- IOTX_WITHOUT_TLS Search Errors Encountered (1) ----
->>>>>>> origin/dev
+---- FAL_USING_NOR_FLASH_DEV_NAME Matches (11 in 4 files) ----
+fal_cfg.h (packages\fal-latest\samples\porting) line 58 :     {FAL_PART_MAGIC_WROD,    "dl-area",    FAL_USING_NOR_FLASH_DEV_NAME,                           0,      1024 * 1024, 0}, \
+fal_cfg.h (packages\fal-latest\samples\porting) line 59 :     {FAL_PART_MAGIC_WROD,    "df-area",    FAL_USING_NOR_FLASH_DEV_NAME,                 1024 * 1024,      1024 * 1024, 0}, \
+fal_cfg.h (packages\fal-latest\samples\porting) line 60 :     {FAL_PART_MAGIC_WROD,    "kv-area",    FAL_USING_NOR_FLASH_DEV_NAME,        (1024 + 1024) * 1024,      1024 * 1024, 0}, \
+fal_cfg.h (packages\fal-latest\samples\porting) line 61 :     {FAL_PART_MAGIC_WROD,      "elmfs",    FAL_USING_NOR_FLASH_DEV_NAME, (1024 + 1024 + 1024) * 1024, 13 * 1024 * 1024, 0}, \
+fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 35 : #ifndef FAL_USING_NOR_FLASH_DEV_NAME
+fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 36 : #define FAL_USING_NOR_FLASH_DEV_NAME             "norflash0"
+fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 45 : struct fal_flash_dev nor_flash0 = {FAL_USING_NOR_FLASH_DEV_NAME, 0, 16 * 1024 * 1024, 4096, {init, read, write, erase}};
+init in fal_flash_sfud_port.c (packages\fal-latest\samples\porting) :     sfud_dev = rt_sfud_flash_find_by_dev_name(FAL_USING_NOR_FLASH_DEV_NAME);
+sfud_nor_flash_init in fal_flash_sfud_port.c (packages\fal-latest\samples\porting) : 		if (rt_sfud_flash_probe(FAL_USING_NOR_FLASH_DEV_NAME, NOR_FLASH_SPI_DEV_NAME) == RT_NULL)
+fs_init in main.c (applications) : 		LOG_D("msh> mkfs -t elm %s", FAL_USING_NOR_FLASH_DEV_NAME);
+rtconfig.h line 343 : #define FAL_USING_NOR_FLASH_DEV_NAME "nor_flash0"
+---- FAL_USING_NOR_FLASH_DEV_NAME Search Errors Encountered (1) ----
 The following 1 files could not be processed:
-E:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
+D:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
