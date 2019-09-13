@@ -242,6 +242,9 @@ __exit:
     return result;
 }
 
+// TODO: add by warfalcon
+rt_uint8_t sim800c_rssi = 99;
+
 static void check_link_status_entry(void *parameter)
 {
 #define SIM800C_LINK_STATUS_OK   1
@@ -253,6 +256,7 @@ static void check_link_status_entry(void *parameter)
     int result_code, link_status;
     struct at_device *device = RT_NULL;
     struct netdev *netdev = (struct netdev *)parameter;
+	rt_uint8_t rssi_code, ber_code;
 
     device = at_device_get_by_name(AT_DEVICE_NAMETYPE_NETDEV, netdev->name);
     if (device == RT_NULL)
@@ -270,11 +274,24 @@ static void check_link_status_entry(void *parameter)
 
     while (1)
     {
-        /* send "AT+CGREG?" commond  to check netweork interface device link status */
+    	// TODO: add by warfalcon		
+		if (at_obj_exec_cmd(device->client, resp, "AT+CSQ") >= 0)
+		{
+			at_resp_parse_line_args_by_kw(resp, "+CSQ:", "+CSQ: %d,%d", &rssi_code, &ber_code);
+			LOG_D("signal strength: %d@%d.", rssi_code, ber_code);
+
+			sim800c_rssi = rssi_code;
+		}
+		else
+		{
+			rt_thread_mdelay(SIM800C_LINK_DELAY_TIME);
+            continue;
+		}
+
+		/* send "AT+CGREG?" commond  to check netweork interface device link status */
         if (at_obj_exec_cmd(device->client, resp, "AT+CGREG?") < 0)
         {
             rt_thread_mdelay(SIM800C_LINK_DELAY_TIME);
-
             continue;
         }
 

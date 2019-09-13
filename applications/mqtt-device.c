@@ -846,8 +846,7 @@ void mqtt_period_task(void)
 			cJSON *js_device  = cJSON_CreateObject();
 			if (js_params && js_quality && js_status && js_device)
 			{
-				//extern rt_uint8_t sim800c_rssi;
-				rt_uint8_t sim800c_rssi = 20;
+				extern rt_uint8_t sim800c_rssi;
 				
 				char str_id[16];
 				rt_memset(str_id, 0, sizeof(str_id));
@@ -909,7 +908,7 @@ static void mqtt_devtag_task(void)
 
 	char msg_pub[128];
 	rt_memset(msg_pub, 0x0, sizeof(msg_pub));
-	rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"123\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", ALI_DEVICE_INFO_NAME, dev_info);
+	rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"%d\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", mqtt_packet_id++, ALI_DEVICE_INFO_NAME, dev_info);
 	
 	iotx_mqtt_topic_info_t topic_msg;
 	rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
@@ -934,17 +933,19 @@ static void mqtt_connect_check_thread(void *arg)
 		{
 			if (IOT_MQTT_CheckStateNormal(mqtt_client_hd) <= 0)
 			{
-				if (is_mqtt_disconnect >= 60)
+				if (is_mqtt_disconnect >= 20)
 				{
 					netdev_link = netdev_get_first_by_flags(NETDEV_FLAG_LINK_UP);
 					if (!rt_strcmp(netdev_link->name, "sim0"))
-					{
+					{	
+						/* GPRS模块需要进行断电和上电操作 */
 						netdev_link->ops->set_down(netdev_link);
 						rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 						netdev_link->ops->set_up(netdev_link);
 					}
 					else
 					{
+						/* 以太网只需将连接状态改变即可 */
 						netdev_low_level_set_status(netdev_link, RT_FALSE);
 						rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 						netdev_low_level_set_status(netdev_link, RT_TRUE);
@@ -959,8 +960,17 @@ static void mqtt_connect_check_thread(void *arg)
 			else
 				is_mqtt_disconnect = 0;
 		}
+		else
+		{
+			/* if the link status of ethernet is up, then set to be default */
+			netdev_link = netdev_get_by_name("e0");
+			if (netdev_link)
+			{
+				netdev_low_level_set_link_status(netdev_get_by_name("sim0"), !(netdev_is_link_up(netdev_link) == 1));
+			}
+		}
 
-		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
+		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND * 3));
 	}
 }
 

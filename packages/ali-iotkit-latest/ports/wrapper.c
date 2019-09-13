@@ -133,7 +133,7 @@ int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1])
 
 int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
 {
-#if 0
+#if 1
 	int len = rt_strlen(ALI_IOTKIT_DEVICE_SECRET);
 	if (len > IOTX_DEVICE_SECRET_LEN)
 	{
@@ -145,7 +145,7 @@ int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1])
     return len;
 #endif
 
-#if 1
+#if 0
     int len = ef_get_env_blob("DeviceSecret", device_secret, IOTX_DEVICE_SECRET_LEN, RT_NULL);
 
 	if (len < 0)

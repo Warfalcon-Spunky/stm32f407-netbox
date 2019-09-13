@@ -69,7 +69,7 @@
 	}											\
 }
 
-#define LOG_TAG              "mod-rtu"    
+#define LOG_TAG              "modbus.rtu"    
 #define LOG_LVL              LOG_LVL_ASSERT
 #include <ulog.h>
 

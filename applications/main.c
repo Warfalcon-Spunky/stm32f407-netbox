@@ -51,15 +51,17 @@ int fs_init(void)
 	}
 	
     /* mount the file system from "filesystem" partition of spi flash. */
-    if (dfs_mount(FS_PARTITION_NAME, "/", "elm", 0, 0) == 0)
+    if (dfs_mount(flash_dev->parent.name, "/", "elm", 0, 0) == 0)
 	{
         LOG_D("Filesystem initialized!");
 	}
     else
     {
-        LOG_D("Failed to initialize filesystem!\n");
-        LOG_D("You should create a filesystem on the block device first!");
-		LOG_D("msh> mkfs -t elm %s", FAL_USING_NOR_FLASH_DEV_NAME);
+    	dfs_mkfs("elm", flash_dev->parent.name);
+		if (dfs_mount(flash_dev->parent.name, "/", "elm", 0, 0) == 0)
+		{
+	        LOG_D("Filesystem initialized!");
+		}
     }    
     
     return 0;
