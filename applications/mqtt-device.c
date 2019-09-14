@@ -24,6 +24,7 @@
 #include <string.h>
 #include "infra_types.h"
 #include "infra_defs.h"
+#include "infra_compat.h"
 //#include "dynreg_api.h"
 #include "dev_sign_api.h"
 #include "mqtt_api.h"
@@ -40,7 +41,7 @@
 #endif /* RT_USING_NETDEV */
 
 #define LOG_TAG              "ali-sdk"    
-#define LOG_LVL              LOG_LVL_DBG
+#define LOG_LVL              LOG_LVL_INFO
 #include <ulog.h>
 
 #define MQTT_MSGLEN                             (1024)
@@ -553,7 +554,7 @@ static void ali_mqtt_property_post_msg_arrive (void *pcontext, void *handle, iot
 
 static void ali_mqtt_device_info_update_msg_arrive (void *pcontext, void *handle, iotx_mqtt_event_msg_pt msg)
 {
-#if 0
+#if 1
 		iotx_mqtt_topic_info_pt topic_info = (iotx_mqtt_topic_info_pt)msg->msg;
 		if (topic_info == NULL)
 		{
@@ -906,9 +907,9 @@ static void mqtt_devtag_task(void)
 		ef_set_env_blob(ALI_DEVICE_INFO_NAME, dev_info, rt_strlen(dev_info));
 	}
 
-	char msg_pub[128];
+	char msg_pub[256];
 	rt_memset(msg_pub, 0x0, sizeof(msg_pub));
-	rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"%d\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", mqtt_packet_id++, ALI_DEVICE_INFO_NAME, dev_info);
+	rt_snprintf(msg_pub, sizeof(msg_pub), "{\"id\": \"%d\",\"version\": \"1.0\",\"params\": [{\"attrKey\": \"%s\",\"attrValue\": \"%s\"}],\"method\": \"thing.deviceinfo.update\"}", mqtt_packet_id++, "Netbox", dev_info);
 	
 	iotx_mqtt_topic_info_t topic_msg;
 	rt_memset(&topic_msg, 0, sizeof(iotx_mqtt_topic_info_t));
@@ -984,12 +985,14 @@ static void mqtt_thread_main_thread(void *arg)
 {
 #if 0
 	/* 确定其中至少有网卡上线才执行线程 */
-	struct netdev *netdev_link = RT_NULL;
-	while (netdev_link == RT_NULL)
+	while (1)
 	{
 		struct netdev *netdev_link = netdev_get_first_by_flags(NETDEV_FLAG_LINK_UP);
 		if (netdev_link)
-			netdev_set_default(netdev_link);
+		{
+			netdev_low_level_set_link_status(netdev_link, 1);
+			break;			
+		}
 		
 		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 	}
@@ -1001,23 +1004,23 @@ static void mqtt_thread_main_thread(void *arg)
     
     HAL_GetProductKey(meta.product_key);
 	HAL_GetProductSecret(meta.product_secret);
-	HAL_GetDeviceName(meta.device_name);
+	HAL_GetDeviceName(meta.device_name);  
     
 	if (topic_buff != RT_NULL)
 	{
 		rt_free(topic_buff);
 		topic_buff = RT_NULL;
-	}
+	}    
 
 	while (topic_buff == RT_NULL)
 	{
 		char *topic = mqtt_check_load_topic(meta.product_key, meta.device_name, topic);
         if (topic)
             topic_buff = topic;
-	}
+	}	    
     
     iotx_sign_mqtt_t sign_mqtt;
-	iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
+    iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
 
 #if 0
 	if (HAL_GetDeviceSecret(meta.device_secret) <= 0)
@@ -1040,39 +1043,40 @@ static void mqtt_thread_main_thread(void *arg)
 	HAL_GetDeviceSecret(meta.device_secret);
 #endif
 
+
 	if (IOT_Sign_MQTT(region, &meta, &sign_mqtt) < 0)
 	{	
 		LOG_D("Device sign failed.");
 		return;
 	}
-
+	
 	LOG_D("sign_mqtt.hostname: %s", sign_mqtt.hostname);
-    LOG_D("sign_mqtt.port    : %d", sign_mqtt.port);
-    LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
-    LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
-    LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);
+	LOG_D("sign_mqtt.port	 : %d", sign_mqtt.port);
+	LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
+	LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
+	LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);	
+	
+	rt_thread_mdelay(rt_tick_from_millisecond(5 * RT_TICK_PER_SECOND));
 
 	while (is_mqtt_exit == 0)
 	{
 		int i;
 		int mqtt_period_cnt = 0;
-		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);
+		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);              
 		
 		/* Initialize MQTT parameter */
 		iotx_mqtt_param_t mqtt_params;
 	    rt_memset(&mqtt_params, 0x0, sizeof(mqtt_params));
 		
-	    /* feedback parameter of platform when use IOT_SetupConnInfo() connect */
-		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
-		
+	    /* caclate parameter use IOT_Sign_MQTT() */				
 	    mqtt_params.port      = sign_mqtt.port;
 	    mqtt_params.host      = sign_mqtt.hostname;
 	    mqtt_params.client_id = sign_mqtt.clientid;
 	    mqtt_params.username  = sign_mqtt.username;
 	    mqtt_params.password  = sign_mqtt.password;
 		
-		/* not use TLS or SSL, only TCP channel */
-	    mqtt_params.pub_key = RT_NULL;
+		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
+		
 	    /* timeout of request. uint: ms */
 	    mqtt_params.request_timeout_ms = 2000;
 	    mqtt_params.clean_session      = 0;
@@ -1083,7 +1087,7 @@ static void mqtt_thread_main_thread(void *arg)
 	    mqtt_params.write_buf_size = MQTT_MSGLEN;
 	    /* configure handle of event */
 	    mqtt_params.handle_event.h_fp     = ali_mqtt_event_handle;
-	    mqtt_params.handle_event.pcontext = RT_NULL;
+	    mqtt_params.handle_event.pcontext = RT_NULL;             
 	
 		/* construct a MQTT device with specify parameter */
 	    mqtt_client_hd = IOT_MQTT_Construct(&mqtt_params);
@@ -1092,7 +1096,7 @@ static void mqtt_thread_main_thread(void *arg)
 	        LOG_D("construct MQTT failed!");
 	        rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 			continue;
-	    }
+	    }		          
         
         /* sbuscribe all topic */
         for (i = 0; i < sub_items; i++)
@@ -1158,12 +1162,12 @@ __do_main_release:
 static int ali_mqtt_init(void)
 {
 	rt_thread_t tid;
-	
-    tid = rt_thread_create("mqtt.main", mqtt_thread_main_thread, RT_NULL, 6 * 1024, RT_THREAD_PRIORITY_MAX / 2 - 1, 10);
+	    
+    tid = rt_thread_create("mqtt.main", mqtt_thread_main_thread, RT_NULL, 6 * 1024, RT_THREAD_PRIORITY_MAX / 2, 10);
     if (tid != RT_NULL)
         rt_thread_startup(tid);
 
-	tid = rt_thread_create("mqtt.chk", mqtt_connect_check_thread, RT_NULL, 2 * 1024, RT_THREAD_PRIORITY_MAX / 2, 10);
+	tid = rt_thread_create("mqtt.chk", mqtt_connect_check_thread, RT_NULL, 512, RT_THREAD_PRIORITY_MAX / 2 + 1, 10);
     if (tid != RT_NULL)
         rt_thread_startup(tid);
 

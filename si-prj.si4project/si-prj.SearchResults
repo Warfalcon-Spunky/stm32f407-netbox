@@ -1,15 +1,6 @@
----- FAL_USING_NOR_FLASH_DEV_NAME Matches (11 in 4 files) ----
-fal_cfg.h (packages\fal-latest\samples\porting) line 58 :     {FAL_PART_MAGIC_WROD,    "dl-area",    FAL_USING_NOR_FLASH_DEV_NAME,                           0,      1024 * 1024, 0}, \
-fal_cfg.h (packages\fal-latest\samples\porting) line 59 :     {FAL_PART_MAGIC_WROD,    "df-area",    FAL_USING_NOR_FLASH_DEV_NAME,                 1024 * 1024,      1024 * 1024, 0}, \
-fal_cfg.h (packages\fal-latest\samples\porting) line 60 :     {FAL_PART_MAGIC_WROD,    "kv-area",    FAL_USING_NOR_FLASH_DEV_NAME,        (1024 + 1024) * 1024,      1024 * 1024, 0}, \
-fal_cfg.h (packages\fal-latest\samples\porting) line 61 :     {FAL_PART_MAGIC_WROD,      "elmfs",    FAL_USING_NOR_FLASH_DEV_NAME, (1024 + 1024 + 1024) * 1024, 13 * 1024 * 1024, 0}, \
-fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 35 : #ifndef FAL_USING_NOR_FLASH_DEV_NAME
-fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 36 : #define FAL_USING_NOR_FLASH_DEV_NAME             "norflash0"
-fal_flash_sfud_port.c (packages\fal-latest\samples\porting) line 45 : struct fal_flash_dev nor_flash0 = {FAL_USING_NOR_FLASH_DEV_NAME, 0, 16 * 1024 * 1024, 4096, {init, read, write, erase}};
-init in fal_flash_sfud_port.c (packages\fal-latest\samples\porting) :     sfud_dev = rt_sfud_flash_find_by_dev_name(FAL_USING_NOR_FLASH_DEV_NAME);
-sfud_nor_flash_init in fal_flash_sfud_port.c (packages\fal-latest\samples\porting) : 		if (rt_sfud_flash_probe(FAL_USING_NOR_FLASH_DEV_NAME, NOR_FLASH_SPI_DEV_NAME) == RT_NULL)
-fs_init in main.c (applications) : 		LOG_D("msh> mkfs -t elm %s", FAL_USING_NOR_FLASH_DEV_NAME);
-rtconfig.h line 343 : #define FAL_USING_NOR_FLASH_DEV_NAME "nor_flash0"
----- FAL_USING_NOR_FLASH_DEV_NAME Search Errors Encountered (1) ----
-The following 1 files could not be processed:
-D:\Project\stm32f407-netbox\JLinkLog.txt : File could not be opened.
+---- DEVICE_MODEL_CLASSIC Matches (5 in 3 files) ----
+dev_sign_mqtt.c (packages\ali-iotkit-latest\iotkit-embedded\src\dev_sign) line 49 : #if defined(DEVICE_MODEL_ENABLED) && !defined(DEVICE_MODEL_CLASSIC)
+infra_compat.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) line 60 : #if defined(DEVICE_MODEL_CLASSIC) && defined(DEVICE_MODEL_ENABLED)
+IOT_Ioctl in infra_compat.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #if defined(DEVICE_MODEL_CLASSIC) && defined(DEVICE_MODEL_ENABLED) && !defined(DEPRECATED_LINKKIT)
+IOT_Ioctl in infra_compat.c (packages\ali-iotkit-latest\iotkit-embedded\src\infra) : #if defined(DEVICE_MODEL_CLASSIC) && defined(DEVICE_MODEL_GATEWAY)
+rtconfig.h line 299 : #define DEVICE_MODEL_CLASSIC

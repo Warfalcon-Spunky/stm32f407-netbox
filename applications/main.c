@@ -95,7 +95,7 @@ int vcom_init(void)
     
     return 0;
 }
-INIT_ENV_EXPORT(vcom_init);
+INIT_APP_EXPORT(vcom_init);
 
 
 

@@ -31,7 +31,6 @@
 
 /* Memory Management */
 
-#define RT_USING_MEMPOOL
 #define RT_USING_MEMHEAP
 #define RT_USING_MEMHEAP_AS_HEAP
 #define RT_USING_HEAP
@@ -41,7 +40,7 @@
 #define RT_USING_DEVICE
 #define RT_USING_CONSOLE
 #define RT_CONSOLEBUF_SIZE 128
-#define RT_CONSOLE_DEVICE_NAME "uart"
+#define RT_CONSOLE_DEVICE_NAME "vcom"
 #define RT_VER_NUM 0x40002
 #define ARCH_ARM
 #define RT_USING_CPU_FFS
@@ -67,10 +66,11 @@
 #define FINSH_USING_SYMTAB
 #define FINSH_USING_DESCRIPTION
 #define FINSH_THREAD_PRIORITY 20
-#define FINSH_THREAD_STACK_SIZE 4096
+#define FINSH_THREAD_STACK_SIZE 1024
 #define FINSH_CMD_SIZE 80
 #define FINSH_USING_MSH
 #define FINSH_USING_MSH_DEFAULT
+#define FINSH_USING_MSH_ONLY
 #define FINSH_ARG_MAX 10
 
 /* Device virtual file system */
@@ -119,7 +119,7 @@
 /* Using USB */
 
 #define RT_USING_USB_DEVICE
-#define RT_USBD_THREAD_STACK_SZ 4096
+#define RT_USBD_THREAD_STACK_SZ 1024
 #define USB_VENDOR_ID 0x0FFE
 #define USB_PRODUCT_ID 0x0001
 #define _RT_USB_DEVICE_CDC
@@ -281,16 +281,6 @@
 #define INFRA_STRING
 #define INFRA_NET
 #define INFRA_LIST
-#define INFRA_LOG_NETWORK_PAYLOAD
-#define INFRA_LOG
-
-/* Log Configurations */
-
-#define INFRA_LOG_MUTE_FLW
-#define INFRA_LOG_MUTE_DBG
-#define INFRA_LOG_MUTE_INF
-#define INFRA_LOG_MUTE_WRN
-#define INFRA_LOG_MUTE_CRT
 #define INFRA_TIMER
 #define INFRA_JSON_PARSER
 #define INFRA_MD5
