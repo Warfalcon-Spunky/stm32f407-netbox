@@ -12,8 +12,8 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 
-#define BEEP_PWM_DEVICE  	"pwm1"
-#define BEEP_PWM_CH      	1
+#define BEEP_PWM_DEVICE  		"pwm1"
+#define BEEP_PWM_CH      		1
 
 
 #define SEMIBREVE_LEN 			1600

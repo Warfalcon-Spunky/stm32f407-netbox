@@ -29,6 +29,20 @@ static int dev_old_flag;
 
 int main(void)
 {		
+#if 0
+    rt_pin_mode(68, PIN_MODE_OUTPUT);
+	rt_pin_mode(34, PIN_MODE_OUTPUT);
+	while (1)
+	{
+	    rt_pin_write(68, 1);
+		rt_pin_write(34, 1);
+		rt_thread_mdelay(1000);
+		rt_pin_write(68, 0);
+		rt_pin_write(34, 0);
+		rt_thread_mdelay(1000);
+	}
+#endif
+	
     return RT_EOK;
 }
 

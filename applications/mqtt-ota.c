@@ -42,6 +42,11 @@ static char ota_recv_buff[MQTT_OTA_RECV_BUFF_LEN];
 
 static char firmware_verison[MQTT_OTA_VERSION_MAXLEN];
 
+extern int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1]);
+extern int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1]);
+extern int HAL_GetFirmwareVersion(char *version);
+
+
 void mqtt_start_period_timer(void)
 {
 	rt_timer_t period_timer;
@@ -52,7 +57,6 @@ void mqtt_start_period_timer(void)
 		rt_timer_start(period_timer);
 	}
 }
-
 
 void mqtt_stop_period_timer(void)
 {
@@ -66,13 +70,30 @@ void mqtt_stop_period_timer(void)
 }
 
 
-rt_err_t mqtt_ota_init(void *mqtt_ota_hd, char *product_key, char *device_name)
+rt_err_t mqtt_ota_init(void *mqtt_ota_hd)
 {
-	if ((mqtt_ota_hd == RT_NULL) || (product_key == RT_NULL) || (device_name == RT_NULL))
+	if (mqtt_ota_hd == RT_NULL)
 		return RT_ERROR;
 
 	if (ota_hd)
 		return RT_EOK;
+
+	char product_key[IOTX_PRODUCT_KEY_LEN + 1];
+	char device_name[IOTX_DEVICE_NAME_LEN + 1];
+
+	rt_memset(product_key, 0, sizeof(product_key));
+	if (HAL_GetProductKey(product_key) <= 0)
+	{
+		LOG_D("get product key failed");
+		return RT_ERROR;
+	}
+
+	rt_memset(device_name, 0, sizeof(device_name));
+	if (HAL_GetDeviceName(device_name) <= 0)
+	{
+		LOG_D("get device name failed");
+		return RT_ERROR;
+	}
 
 	ota_hd = IOT_OTA_Init(product_key, device_name, mqtt_ota_hd);
     if (RT_NULL == ota_hd)
@@ -80,8 +101,6 @@ rt_err_t mqtt_ota_init(void *mqtt_ota_hd, char *product_key, char *device_name)
         LOG_D("initialize OTA failed");
 		return RT_ERROR;
     }
-
-	extern int HAL_GetFirmwareVersion(char *version);
 	
 	rt_memset(firmware_verison, 0, sizeof(firmware_verison));
 	if (HAL_GetFirmwareVersion(firmware_verison) <= 0)
@@ -118,14 +137,11 @@ void mqtt_ota_deinit(void)
 	}
 }
 
-rt_err_t mqtt_ota(void *mqtt_ota_hd, char *product_key, char *device_name)
+rt_err_t mqtt_ota(void *mqtt_ota_hd)
 {
 	rt_err_t result = RT_ERROR;
-	
-	if ((mqtt_ota_hd == RT_NULL) || (product_key == RT_NULL) || (device_name == RT_NULL))
-		goto __mqtt_ota_exit;
 
-	if (mqtt_ota_init(mqtt_ota_hd, product_key, device_name) != RT_EOK)
+	if (mqtt_ota_init(mqtt_ota_hd) != RT_EOK)
         goto __mqtt_ota_exit;  
 	
 	if (IOT_OTA_IsFetching(ota_hd))

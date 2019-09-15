@@ -18,20 +18,16 @@
 
 #include "rtthread.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include "infra_types.h"
 #include "infra_defs.h"
 #include "infra_compat.h"
-//#include "dynreg_api.h"
-#include "dev_sign_api.h"
 #include "mqtt_api.h"
 #include "mqtt-def.h"
 #include "cJSON.h"
 #include "easyflash.h"
-
 
 #if !defined(RT_USING_NETDEV)
 #error "This RT-Thread version is older, please check and updata laster RT-Thread!"
@@ -44,8 +40,9 @@
 #define LOG_LVL              LOG_LVL_INFO
 #include <ulog.h>
 
-#define MQTT_MSGLEN                             (1024)
-#define MQTT_KEEPALIVE_INTERNAL                 (60)
+#define MQTT_MSGLEN                             CONFIG_MQTT_MESSAGE_MAXLEN
+#define MQTT_REQUEST_TIMEOUT					CONFIG_MQTT_REQUEST_TIMEOUT
+#define MQTT_KEEPALIVE_INTERNAL                 CONFIG_MQTT_KEEPALIVE_INTERVAL
 #define MQTT_TOPIC_MAX_SIZE						(128)
 
 #define MQTT_MAN_INFO_STRING					"Netbox,Spunky,Radiation.Corp,2019"
@@ -55,6 +52,7 @@ static char *topic_buff = RT_NULL;
 static void    *mqtt_client_hd  = RT_NULL;
 static uint8_t  is_mqtt_exit    = 0;
 static uint8_t  is_mqtt_disconnect = 1;
+static uint32_t mqtt_period_cnt = 0; 
 static uint32_t mqtt_packet_id  = 1;
 
 static void ali_mqtt_property_set_msg_arrive(void *pcontext, void *handle, iotx_mqtt_event_msg_pt msg);
@@ -97,6 +95,12 @@ static const mqtt_subscribe_item mqtt_sub_item[] =
     {ALI_DEVICEINFO_UPDATE_REPLY_SUB,      IOTX_MQTT_QOS1, ali_mqtt_device_info_update_msg_arrive, RT_NULL}
 };
 
+extern int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1]);
+extern int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1]);
+extern int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1]);
+extern int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1]);
+extern int HAL_SetDeviceSecret(char* device_secret);
+
 void *ali_mqtt_get_handle(void)
 {
 	return mqtt_client_hd;
@@ -120,15 +124,20 @@ static char *mqtt_topic_find(const char *topic_fliter)
 	return topic;
 }
 
-static char * mqtt_check_load_topic(char *product_key, char *device_name, char *topic)
+static char * mqtt_check_load_topic(void)
 {
-	RT_ASSERT(product_key != RT_NULL);
-	RT_ASSERT(device_name != RT_NULL);
-
 	int topic_idx;
 	int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);
+
+	char product_key[IOTX_PRODUCT_KEY_LEN + 1];
+	if (HAL_GetProductKey(product_key) <= 0)
+		LOG_D("Get ProductKey failed.");
+
+	char device_name[IOTX_DEVICE_NAME_LEN + 1];
+	if (HAL_GetDeviceName(device_name) <= 0)
+		LOG_D("Get DeviceName failed.");
 	
-	topic = rt_calloc(sub_items, MQTT_TOPIC_MAX_SIZE);
+	char *topic = rt_calloc(sub_items, MQTT_TOPIC_MAX_SIZE);
 	if (topic == RT_NULL)
 	{
 		LOG_D("not enough memory for topic name!");
@@ -181,7 +190,7 @@ static void ali_mqtt_event_handle(void *pcontext, void *pclient, iotx_mqtt_event
     iotx_mqtt_topic_info_pt topic_info = (iotx_mqtt_topic_info_pt)msg->msg;
     if (topic_info == RT_NULL)
     {
-        rt_kprintf("Topic info is null! Exit.");
+        LOG_D("Topic info is null! Exit.");
         return;
     }
     uintptr_t packet_id = (uintptr_t)topic_info;
@@ -193,10 +202,10 @@ static void ali_mqtt_event_handle(void *pcontext, void *pclient, iotx_mqtt_event
             break;
         case IOTX_MQTT_EVENT_DISCONNECT:
 			is_mqtt_disconnect = 1;
-            LOG_D("MQTT disconnect.");
+            LOG_I("MQTT disconnect.");
             break;
         case IOTX_MQTT_EVENT_RECONNECT:
-            LOG_D("MQTT reconnect.");
+            LOG_I("MQTT reconnect.");
             break;
         case IOTX_MQTT_EVENT_SUBCRIBE_SUCCESS:
             LOG_D("subscribe success, packet-id=%u", (unsigned int)packet_id);
@@ -896,7 +905,6 @@ void mqtt_period_task(void)
 	}
 }
 
-
 static void mqtt_devtag_task(void)
 {
 	char dev_info[64];
@@ -975,12 +983,6 @@ static void mqtt_connect_check_thread(void *arg)
 	}
 }
 
-extern int HAL_GetProductKey(char product_key[IOTX_PRODUCT_KEY_LEN + 1]);
-extern int HAL_GetProductSecret(char product_secret[IOTX_PRODUCT_SECRET_LEN + 1]);
-extern int HAL_GetDeviceName(char device_name[IOTX_DEVICE_NAME_LEN + 1]);
-extern int HAL_GetDeviceSecret(char device_secret[IOTX_DEVICE_SECRET_LEN + 1]);
-extern int HAL_SetDeviceSecret(char* device_secret);
-
 static void mqtt_thread_main_thread(void *arg)
 {
 #if 0
@@ -997,91 +999,46 @@ static void mqtt_thread_main_thread(void *arg)
 		rt_thread_mdelay(rt_tick_from_millisecond(RT_TICK_PER_SECOND));
 	}
 #endif
-	
-	/* 如果读存储的设备密码错误或者为空,那么就进行动态注册 */
-	iotx_dev_meta_info_t meta;
-	memset(&meta, 0x0, sizeof(iotx_dev_meta_info_t));
-    
-    HAL_GetProductKey(meta.product_key);
-	HAL_GetProductSecret(meta.product_secret);
-	HAL_GetDeviceName(meta.device_name);  
-    
+
 	if (topic_buff != RT_NULL)
 	{
 		rt_free(topic_buff);
 		topic_buff = RT_NULL;
 	}    
 
-	while (topic_buff == RT_NULL)
+	topic_buff = mqtt_check_load_topic();
+	if (topic_buff == RT_NULL)
 	{
-		char *topic = mqtt_check_load_topic(meta.product_key, meta.device_name, topic);
-        if (topic)
-            topic_buff = topic;
-	}	    
-    
-    iotx_sign_mqtt_t sign_mqtt;
-    iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
-
-#if 0
-	if (HAL_GetDeviceSecret(meta.device_secret) <= 0)
-	{
-		while (1)
-		{
-			if (IOT_Dynamic_Register(region, &meta) < 0)
-			{
-				LOG_D("IOT_Dynamic_Register failed.");
-			}
-			else
-			{
-                HAL_SetDeviceSecret(meta.device_secret);
-				LOG_D("Device Secret: %s.", meta.device_secret);
-				break;
-			}
-		}
-	}
-#else
-	HAL_GetDeviceSecret(meta.device_secret);
-#endif
-
-
-	if (IOT_Sign_MQTT(region, &meta, &sign_mqtt) < 0)
-	{	
-		LOG_D("Device sign failed.");
+		LOG_D("Load MQTT Topic failed!");
 		return;
 	}
-	
-	LOG_D("sign_mqtt.hostname: %s", sign_mqtt.hostname);
-	LOG_D("sign_mqtt.port	 : %d", sign_mqtt.port);
-	LOG_D("sign_mqtt.username: %s", sign_mqtt.username);
-	LOG_D("sign_mqtt.password: %s", sign_mqtt.password);
-	LOG_D("sign_mqtt.clientid: %s", sign_mqtt.clientid);	
-	
-	rt_thread_mdelay(rt_tick_from_millisecond(5 * RT_TICK_PER_SECOND));
 
 	while (is_mqtt_exit == 0)
-	{
-		int i;
-		int mqtt_period_cnt = 0;
-		int sub_items = sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item);              
+	{		
+		iotx_http_region_types_t region = IOTX_HTTP_REGION_SHANGHAI;
+		IOT_Ioctl(IOTX_IOCTL_SET_REGION, (void *)&region);
+
+#if 0
+		/* 控制dynamic=1执行动态注册,否则不执行动态注册 */
+		if (HAL_GetDeviceSecret(meta.device_secret) <= 0)
+		{		
+			int dynamic = 1;
+			IOT_Ioctl(IOTX_IOCTL_SET_DYNAMIC_REGISTER, (void *)&dynamic);
+		}
+#endif
 		
 		/* Initialize MQTT parameter */
 		iotx_mqtt_param_t mqtt_params;
 	    rt_memset(&mqtt_params, 0x0, sizeof(mqtt_params));
 		
-	    /* caclate parameter use IOT_Sign_MQTT() */				
-	    mqtt_params.port      = sign_mqtt.port;
-	    mqtt_params.host      = sign_mqtt.hostname;
-	    mqtt_params.client_id = sign_mqtt.clientid;
-	    mqtt_params.username  = sign_mqtt.username;
-	    mqtt_params.password  = sign_mqtt.password;
-		
 		mqtt_params.customize_info = MQTT_MAN_INFO_STRING;
 		
 	    /* timeout of request. uint: ms */
-	    mqtt_params.request_timeout_ms = 2000;
-	    mqtt_params.clean_session      = 0;
+	    mqtt_params.request_timeout_ms = MQTT_REQUEST_TIMEOUT;	    
 	    /* internal of keepalive checking: 60s~300s */
 	    mqtt_params.keepalive_interval_ms = MQTT_KEEPALIVE_INTERNAL * 1000; 
+		/* default is 0 */
+		mqtt_params.clean_session = 0;		
 		/* MQTT read/write buffer size */
 	    mqtt_params.read_buf_size  = MQTT_MSGLEN;
 	    mqtt_params.write_buf_size = MQTT_MSGLEN;
@@ -1099,7 +1056,7 @@ static void mqtt_thread_main_thread(void *arg)
 	    }		          
         
         /* sbuscribe all topic */
-        for (i = 0; i < sub_items; i++)
+        for (int i = 0; i < (sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item)); i++)
         {	
         	if (mqtt_sub_item[i].topic_handle_func == RT_NULL)
         		continue;
@@ -1127,8 +1084,8 @@ static void mqtt_thread_main_thread(void *arg)
 				mqtt_period_task();
 
 			/* OTA周期执行 */
-			extern rt_err_t mqtt_ota(void *mqtt_ota_hd, char *product_key, char *device_name);
-			mqtt_ota(mqtt_client_hd, meta.product_key, meta.device_name);
+			extern rt_err_t mqtt_ota(void *mqtt_ota_hd);
+			mqtt_ota(mqtt_client_hd);
 			
             mqtt_period_cnt++;        
         }
@@ -1142,7 +1099,7 @@ static void mqtt_thread_main_thread(void *arg)
 
 __do_main_release:
         /* ubsbuscribe all topic */
-        for (i = 0; i < sub_items; i++)			
+        for (int i = 0; i < (sizeof(mqtt_sub_item) / sizeof(mqtt_subscribe_item)); i++)			
             IOT_MQTT_Unsubscribe(mqtt_client_hd, &topic_buff[i * 128]);
 
 		if (RT_NULL != mqtt_client_hd)
