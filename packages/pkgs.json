@@ -25,14 +25,19 @@
   "name": "ALI_IOTKIT"
  }, 
  {
-  "path": "/packages/security/mbedtls", 
-  "ver": "latest", 
-  "name": "MBEDTLS"
+  "path": "/packages/security/tinycrypt", 
+  "ver": "v1.0.0", 
+  "name": "TINYCRYPT"
  }, 
  {
   "path": "/packages/tools/EasyFlash", 
   "ver": "latest", 
   "name": "EASYFLASH"
+ }, 
+ {
+  "path": "/packages/tools/adbd", 
+  "ver": "latest", 
+  "name": "ADBD"
  }, 
  {
   "path": "/packages/system/fal", 
